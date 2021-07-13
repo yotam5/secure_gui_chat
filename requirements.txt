@@ -1,0 +1,7 @@
+
+pip install PySide2 
+
+pip install pycryptodome
+
+pip install msgpack
+
