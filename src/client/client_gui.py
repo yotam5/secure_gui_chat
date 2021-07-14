@@ -8,7 +8,7 @@ from functools import partial
 from Client import Client
 from src.utilities.config_utility import network_configuration_loader
 
-
+from time import sleep
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -33,6 +33,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # wait_till(value)
         # if self.client_inner.login('123'):
         #    function()
+        sleep(0.2)
         function()
 
     def login_task(self):

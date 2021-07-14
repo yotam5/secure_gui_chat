@@ -55,7 +55,7 @@ def create_signature(data: bytes, key_d, key_n):
         key_n = keyPair.n
     """
     hash = int.from_bytes(sha512(data).digest(), byteorder='big')
-    return pow(hash, key_d key_n)
+    return pow(hash, key_d, key_n)
 
 
 def verify_signature(data: bytes, signature: bytes, key_e, key_n) -> bool:

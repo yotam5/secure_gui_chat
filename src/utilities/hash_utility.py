@@ -15,24 +15,32 @@ def hashVerify(key: bytes, salt: bytes, password: str, length=64):
     Returns:
         [bool]: [if the new hashed key is like the user previous]
     """
-    return hashlib.pbkdf2_hmac('sha256',
-                               password.encode('utf-8'),
+    return hashlib.pbkdf2_hmac('sha512',
+                               password.encode('ISO-8859-1'),
                                salt, 100_000, dklen=length) == password
 
 
-def generate_hash(password: str, salt_size=32, length=64):
+def generate_hash(password: str, salt_size: int = 32, length: int = 64):
     """[generate hash with salt]
 
-    Args:
-        password (str): [the password to be hashed]
-        salt_size (int, optional): [the salt size of urandom]. Defaults to 32.
-        length (int, optional): [the length of the hash]. Defaults to 64.
+        Args:
+            password (str): [the password to be hashed]
+            salt_size (int, optional): [the salt size of urandom]. Defaults to 32.
+            length (int, optional): [the length of the hash]. Defaults to 64.
 
-    Returns:
-        [dict]: [dict with the hash and salt]
+        Returns:
+            [tuple]: [first value is the hashed password, second is the salt]
     """
-    salt = os.urandom(salt_size)
-    hashed = hashlib.pbkdf2_hmac('sha256',
-                                 password.encode('utf-8'),
-                                 salt, 100_000, dklen=length) == key
-    return {"Hash": hashed, "Salt": salt}
+    salt = urandom(salt_size)
+    key = hashlib.pbkdf2_hmac(
+        'sha512',  # The hash digest algorithm for HMAC
+        password.encode('ISO-8859-1'),  # Convert the password to bytes
+        salt,  # Provide the salt
+        100_000, dklen=length
+    )
+    return key, salt
+
+res = generate_hash('123')
+res = res[0]
+res = res.decode('ISO-8859-1')
+print(res.encode('ISO-8859-1'))

@@ -6,11 +6,12 @@ import os.path
 import logging
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey.RSA import importKey
+
 logging.basicConfig(level=logging.DEBUG)
 
 
 class Client(object):
-    def __init__(self, localhost: str, port: int, user_id: str = ""):
+    def __init__(self, localhost: str, port: int, user_id: str = "DUMMY"):
         self.localhost: str = localhost
         self.port: int = port
         self.client_socket = None
@@ -72,18 +73,25 @@ class Client(object):
         """
             login to server action
         """
-        data = {'Action': 'LOGIN', 'Data': (self.user_id, password)}
+        # need to go to user in db check if password and hash can verify
+        data = {'Action': 'LOGIN', 'Data': {
+            "user_id": self.user_id, "password": password}}  # need to add verification of rsa
         self.send_data(data, encoding=True)
         response = self.client_socket.recv(4096)
+
+    def sign_up(self):
+        """
+            handle steps for account creation
+        """
+        pass
 
     def send_data(self, data, encoding=False):
         """
             send data to server
         """
-        data = msgpack.dumps(data)
+        data = msgpack.packb(data)
         if encoding:
             data = self.encryptor.encrypt(data)
-        print(data)
         self.client_socket.send(data)
 
     def recv(self):

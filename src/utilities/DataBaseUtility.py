@@ -1,83 +1,94 @@
 import sqlite3
 import os.path
 import logging
+# TODO: FIX user_id to id and the insert of hash salt etc
+# TODO: for bytes can do encode and decode
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class DataBaseUtility(object):
     """
-    [
         class Utility that handles the server database
-    ]
     """
 
     def __init__(self, filename=f'./database.db'):
         self.__conn = sqlite3.connect(filename, check_same_thread=False)
         self.__cursor = self.__conn.cursor()
+        self.__cursor.row_factory = sqlite3.Row  # to be able to retrive a dict
 
-    def addUser(self, user_id, password_hash, hash_salt, status=True):
+    def add_user(self, user_id: str, hashed_password: bytes,
+                 salt: bytes, pubkey=b'', status=0):
         """
             add user to the database
         """
-        if self.isExist(user_id):
-            print(f"user with id {user_id} exists")
+        if self.is_exist(user_id):
+            logging.debug(f"user with id {user_id} exists")
             return False
+
+        data_for_insertion = \
+            (f"'{user_id}', '{salt.decode()}','"
+             f"{hashed_password.decode()}','{pubkey.decode()}',{status}")
+
+        print(data_for_insertion)
         self.__cursor.execute(
-            f"INSERT INTO users VALUES ('{user_id}','{password}',{str(status)})")
+            f"INSERT INTO users_data VALUES ({data_for_insertion})")
         self.__conn.commit()
-        print(f"added user {userid}")
+        logging.debug(f"added user {user_id}")
         return True
 
-    def removeUser(self, user_id):
+    def remove_user(self, user_id):
         """
             remove user from database
         """
-        if self.isExist(user_id):
+        if self.is_exist(user_id):
             self.__cursor.execute(
-                f"DELETE FROM users WHERE id LIKE '{user_id}'")
+                f"DELETE FROM users_data WHERE id LIKE '{user_id}'")
             self.__conn.commit()
-            print(f"user {user_id} was deleted")
+            logging.debug(f"user {user_id} was deleted")
             return True
-        print(f"cant delete user {user_id}, the user was not found")
+        logging.debug(f"cant delete user {user_id}, the user was not found")
         return False
 
-    def isExist(self, user_id):
+    def is_exist(self, user_id, selection="*"):
         """
             return the data of user_id, if user doesnt exist return None
         """
         result = self.__cursor.execute(
-            f"SELECT id FROM users WHERE id LIKE '{user_id}'").fetchone()
-        return result
+            f"SELECT {selection} FROM users_data WHERE id LIKE '{user_id}'")
+        return result.fetchone()
 
-    def login(self, user_id, password):
+    def login(self, user_id, password) -> bool:
         """
-            search user with corresponding values for login 
+            search user with corresponding values for login
         """
-        result = self.__cursor.execute(
-            f"SELECT * FROM users WHERE id LIKE '{user_id}' AND password LIKE '{password}'")
-        data = result.fetchone()
-        return data
+        user_data = is_exist(user_id)
+        if user_data:
+            logging.debug(f"user_id {user_id} logged to the server")
+            return True
+        return False
 
     def close(self):
         """
             close the server and commit changes i think?
         """
-        self.__conn.execute("UPDATE users_data SET status = 0")
+        self.__conn.execute("UPDATE users_data SET online = 0")
         self.__conn.commit()
-        self.__conn.close()
+        logging.debug("the DataBaseUtility is being closed")
 
-    def get_all(self):  # DUMB?????!
-        all_values = self.__cursor.execute("SELECT * FROM users")
-        all_values = all_values.fetchall()
-        return all_values
+    def __del__(self):  # bruh what
+        logging.debug("the database now is closing using __del__")
+        self.close()
 
-    def __del__():  # bruh what
+    def _del_(self):
         logging.debug("the database now is closing using __del__")
         self.close()
 
 
 if __name__ == '__main__':
-    test = DataBaseUtiliy()
-    test.addUser('Support', '123')
-    test.removeUser('123')
-    print(test.login('Support', '123'))
-    print(test.get_all())
+    print("aa")
+    test = DataBaseUtility()
+    test.add_user("yotam", b'123', b'123', b'key_idk', 0)
+    user_data = test.is_exist('yotam')
+    print(user_data['salt'])
+    print("end")
