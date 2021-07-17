@@ -94,17 +94,24 @@ class Client(object):
         # NOTE: should i check for rsa verification?
         # start dffie hellman
         logging.debug("start diffie hellman")
-        
+
         privateKey = pyDH.DiffieHellman()
         bytesPubKey = str(privateKey.gen_public_key()).encode('utf-8')
         bytesPubKey = zlib.compress(bytesPubKey)
         data_to_send = {'Action': 'DiffieHellman', 'PubKey': bytesPubKey}
         data_to_send = msgpack.packb(data_to_send)
-        print(self.decrypyor.decrypt(server_data))
+        logging.debug(self.decrypyor.decrypt(server_data))
         self.client_socket.send(
-            self.encryptor.encrypt(msgpack.packb(data_to_send)))
-        
+            self.encryptor.encrypt(data_to_send))
+
         logging.debug("end diffie hellman")
+        server_data = msgpack.loads(self.decrypyor.decrypt(server_data))
+        print(server_data)
+        serverPubKey = server_data['PubKey']
+        serverPubKey = int(zlib.decompress(serverPubKey).decode('utf-8'))
+        secret = privateKey.gen_shared_key(serverPubKey)
+        logging.debug(f"aes key is {secret}")
+        return secret
 
     def login(self, password):  # need rsa encryption
         """

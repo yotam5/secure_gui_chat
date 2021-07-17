@@ -14,10 +14,10 @@ import pyDH
 import msgpack
 
 # my own
+from DataBaseUtility import DataBaseManager
 from src.utilities import rsa_utility
 from src.utilities import hash_utility
 from src.utilities.config_utility import network_configuration_loader
-from src.utilities.DataBaseUtility import DataBaseUtility
 
 """
     TODO:
@@ -36,7 +36,7 @@ class Server(object):
         self.publicKey = None
         self.privateKey = None
         self.directory = os.path.dirname(os.path.realpath(__file__))
-        self.database_manager = DataBaseUtility(
+        self.database_manager = DataBaseManager(
             f"{self.directory}/database.db")
         # idea, create a dict with usernames for msg
         signal.signal(signal.SIGINT, self.receive_sigint)
@@ -110,9 +110,6 @@ class Server(object):
 
         logging.debug("secure_connection_setup was called")
         myBox = PKCS1_OAEP.new(self.privateKey)  # use thread lock instead?
-        clientPubBox = None
-        clientPubKey = None
-        secure_key = None
 
         client_data = client.recv(4096)
         if client_data in ['', b'']:  # client disconnected
@@ -121,7 +118,7 @@ class Server(object):
         logging.debug("start rsa exchange")
         # first action must be rsa exchange
         client_data = msgpack.loads(client_data)
-        clientPubKey, clientPubBox = self.handle_exchange(
+        clientPubRsa, clientPubBox = self.handle_exchange(
             client_data, client)
         logging.debug("rsa connection established")
 
@@ -137,10 +134,15 @@ class Server(object):
         data_to_send = {'Action': 'DiffieHellman', 'PubKey': bytesPubKey}
         data_to_send = msgpack.packb(data_to_send)
 
-        client.send(clientPubBox.encrypt(msgpack.packb(data_to_send)))
+        client.send(clientPubBox.encrypt(data_to_send))
         client_response = client.recv(4096)
+        client_response = msgpack.loads(myBox.decrypt(client_response))
         logging.debug("end diffie hellman")
-
+        clientPubKey = client_response['PubKey']
+        clientPubKey = int(zlib.decompress(clientPubKey).decode('utf-8'))
+        secret = privateKey.gen_shared_key(clientPubKey)
+        logging.debug(f"aes key is {secret}")
+        return secret
 
     def client_handle(self, client):
         """

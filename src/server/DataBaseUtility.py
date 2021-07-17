@@ -7,7 +7,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
-class DataBaseUtility(object):
+class DataBaseManager(object):
     """
         class Utility that handles the server database
     """
