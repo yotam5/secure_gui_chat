@@ -1,7 +1,7 @@
 # secure_gui_chat
 
 
-# Foobar
+# USC
 
 secure_gui_chat is my python project about networking that the main focus is about security.
 In the project i used rsa, diffie hellman, aes and hashing to simulate a secure chat
@@ -10,11 +10,11 @@ In the project i used rsa, diffie hellman, aes and hashing to simulate a secure 
 ## Usage
 
 ```bash
-pyton3  server.py
+python3 server.py
 ```
 
 ```bash
-pyton3  client_gui.py
+python client_gui.py
 ```
 
 ## Contributing
