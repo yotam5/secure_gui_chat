@@ -1,25 +1,29 @@
+# built in
 import socket
 import threading
-import msgpack
 import logging
 import os.path
+import signal
+from sys import exit, getsizeof
+import zlib
+
+# dependecies
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey.RSA import importKey
-from sys import exit, getsizeof
+import pyDH
+import msgpack
+
+# my own
 from src.utilities import rsa_utility
 from src.utilities import hash_utility
 from src.utilities.config_utility import network_configuration_loader
 from src.utilities.DataBaseUtility import DataBaseUtility
 
-
 """
     TODO:
-    1-use gmail or telegram for 2fa oauth with one time password 
-    2-use rsa for AES256 key exchange
-    3-use bcypt instead of sha512
-    4-using pysrp
-    5-the signature the data to prevent man in the middle,
-      to know ur talking with the real client
+        LOGIN:
+            dffine hellman
+            challenge response
 """
 logging.basicConfig(level=logging.DEBUG)
 # note when works remember to use the device ip and not ip in conf
@@ -35,16 +39,17 @@ class Server(object):
         self.database_manager = DataBaseUtility(
             f"{self.directory}/database.db")
         # idea, create a dict with usernames for msg
+        signal.signal(signal.SIGINT, self.receive_sigint)
 
     def load_keys(self):
         """
             load the keys of the server or create them
             if it doesnt exist
         """
-        if not os.path.exists('./private.pem') or \
+        """if not os.path.exists('./private.pem') or \
                 not os.path.exists('./public.pem'):
-            logging.debug("keys not found so will be created")
-            rsa_utility.createAndSaveKeys(self.directory)
+            logging.debug("keys not found so will be created")"""
+        rsa_utility.createAndSaveKeys(self.directory)
         logging.debug("loading keys")
         self.publicKey = rsa_utility.loadKeyFromFile(
             f'{self.directory}/public.pem')
@@ -79,14 +84,14 @@ class Server(object):
 
     def close_server(self):
         """
-            idk
+            closing the server, need to work on when and how
         """
         # broadcast exit?
         self.server_socket.close()
 
-    def hand_shake(self, client_data: dict, client) -> bytes:
+    def handshake(self, client_data: dict, client) -> bytes:
         """
-            rsa hand
+            rsa handshake
         """
         client_pubKey = client_data['PubKey']
         client_pubKey = rsa_utility.rsaKeyFromBase64String(
@@ -96,38 +101,85 @@ class Server(object):
         client.send(msgpack.packb(data))
         return client_pubKey
 
+    def secure_connection_setup(self, client) -> str:
+        """
+            does rsa keys exchange then does diffie hellman
+            algorithem to generate keys that will be used for
+            AES encryption
+        """
+
+        logging.debug("secure_connection_setup was called")
+        myBox = PKCS1_OAEP.new(self.privateKey)  # use thread lock instead?
+        clientPubBox = None
+        clientPubKey = None
+        secure_key = None
+
+        client_data = client.recv(4096)
+        if client_data in ['', b'']:  # client disconnected
+            return "disconnected"  # client disconnected
+
+        logging.debug("start rsa exchange")
+        # first action must be rsa exchange
+        client_data = msgpack.loads(client_data)
+        clientPubKey, clientPubBox = self.handle_exchange(
+            client_data, client)
+        logging.debug("rsa connection established")
+
+        # from now on the chat is rsa encrypted
+        # NOTE: should i check for rsa verification?
+
+        # start dffie hellman
+        logging.debug("start diffie hellman")
+
+        privateKey = pyDH.DiffieHellman()
+        bytesPubKey = str(privateKey.gen_public_key()).encode('utf-8')
+        bytesPubKey = zlib.compress(bytesPubKey)
+        data_to_send = {'Action': 'DiffieHellman', 'PubKey': bytesPubKey}
+        data_to_send = msgpack.packb(data_to_send)
+
+        client.send(clientPubBox.encrypt(msgpack.packb(data_to_send)))
+        client_response = client.recv(4096)
+        logging.debug("end diffie hellman")
+
+
     def client_handle(self, client):
         """
             handle the client data and stuff?
         """
-        serve_client = True
+        self.secure_connection_setup(client)
+        """serve_client = True
         myBox = PKCS1_OAEP.new(self.privateKey)  # use thread lock instead?
         clientPubBox = None
         exchanged = False
+        decrypted_data = None
+        aes_key = None
+
+        # stage 1: rsa key exchange
+        # stage 2: dffie hellman algorithm for aes keys
+        # stage 3: challange response for login
 
         while serve_client:
-            data = client.recv(4096)
-            if data in ['', b'']:  # client disconnected
+            client_data = client.recv(4096)
+            if client_data in ['', b'']:  # client disconnected
                 serve_client = False
             else:
-                logging.debug(f"client data size is {getsizeof(data)}")
+                logging.debug(f"client data size is {getsizeof(client_data)}")
                 if clientPubBox:
                     logging.debug(
                         "the client encrypted data is being decrypted")
-                    # FIXME: this is not private key erro raise
-                    client_data = msgpack.loads(myBox.decrypt(data))
+                    decrypted_data = msgpack.loads(myBox.decrypt(client_data))
                 else:
-                    client_data = msgpack.loads(data)
+                    decrypted_data = msgpack.loads(client_data)
 
-                logging.debug(data)
+                logging.debug(decrypted_data)
                 logging.debug("handling data result")
 
-                data_dict_keys = data.keys()
+                data_dict_keys = decrypted_data.keys()
                 if 'Action' in data_dict_keys:
-                    client_action = data['Action']
+                    client_action = decrypted_data['Action']
                     if exchanged:  # if the chat is being encrypted y'know
                         if client_action in ['LOGIN', 'SIGN_UP']:
-                            login_info = client_data['Data']
+                            login_info = decrypted_data['Data']
                             if client_action == 'SIGN_UP':
                                 generated_salted_hash = hash_utility.generate_hash(
                                     client_info['password'],)
@@ -137,36 +189,37 @@ class Server(object):
 
                     else:
                         if client_action == 'EXCHANGE':
-                            clientPubKey, clientPubBox = self.handle_exchange()
+                            clientPubKey, clientPubBox = self.handle_exchange(
+                                decrypted_data, client)
                             exchanged = True
-        logging.debug(f"client disconnected")
+        logging.debug(f"client disconnected")"""
 
         exit(0)  # terminate thread
 
-        def handle_signup(user_id, password):
-            """
-                create a new user into the database
-            """
-            logging.debug("client signup called")
-            if not self.database_manager.is_exist(user_id):
-                logging.debug(f"the user {user_id} can be created")\
+    def handle_signup(user_id, password):
+        """
+            create a new user into the database
+        """
+        logging.debug("client signup called")
+        if not self.database_manager.is_exist(user_id):
+            logging.debug(f"the user {user_id} can be created")\
 
-                self.database_manager.add_user(user_id, key, salt)
-            logging.debug(f"the user {user_id} already exists")
+            self.database_manager.add_user(user_id, key, salt)
+        logging.debug(f"the user {user_id} already exists")
 
-        def handle_login(self):
-            """
-                handle login into the server, correct user_id and password
-            """
-            logging.debug("client login handle called")
-            pass
+    def handle_login(self):
+        """
+            handle login into the server, correct user_id and password
+        """
+        logging.debug("client login handle called")
+        pass
 
-    def handle_exchange(self):
+    def handle_exchange(self, client_data: dict, client):
         """
             handle rsa keys exchange with client
         """
         logging.debug("the server is doing exchange operation")
-        clientPubKey = self.hand_shake(data, client)
+        clientPubKey = self.handshake(client_data, client)
         clientPubBox = PKCS1_OAEP.new(importKey(clientPubKey))
         return clientPubKey, clientPubBox
 
@@ -195,6 +248,11 @@ class Server(object):
         """
         host_name = socket.gethostname()
         return socket.gethostbyname(host_name + ".local")
+
+    def receive_sigint(self, sig_num, frame):
+        logging.debug("received sigint now closing server and socket")
+        self.close_server()
+        exit(0)
 
 
 if __name__ == '__main__':

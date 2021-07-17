@@ -1,9 +1,16 @@
+# built in
 import socket
-import msgpack
 import sys
-from src.utilities import rsa_utility
 import os.path
 import logging
+import zlib
+
+# my own
+from src.utilities import rsa_utility
+
+# dependencies
+import msgpack
+import pyDH
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey.RSA import importKey
 
@@ -25,16 +32,17 @@ class Client(object):
         self.load_keys()
         self.decrypyor = PKCS1_OAEP.new(self.privateKey)
         self.encryptor = None
+        self.__aes256key = ""
 
     def load_keys(self):
         """
             load the client keys if created,
             if not create and loads
         """
-        if not os.path.exists('./private.pem') or \
+        """if not os.path.exists('./private.pem') or \
                 not os.path.exists('./public.pem'):
-            logging.debug("keys not found so will be created")
-            rsa_utility.createAndSaveKeys(self.directory)
+            logging.debug("keys not found so will be created")"""
+        rsa_utility.createAndSaveKeys(self.directory)
         logging.debug("loading keys")
         self.publicKey = rsa_utility.loadKeyFromFile(
             f'{self.directory}/public.pem')
@@ -56,7 +64,7 @@ class Client(object):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.localhost, self.port))
 
-    def hand_shake(self):
+    def handshake(self):
         """
             handle rsa exchange with the server
         """
@@ -68,6 +76,35 @@ class Client(object):
             self.serverPublicKey)
         logging.debug(f"server key: {self.serverPublicKey}")
         self.encryptor = PKCS1_OAEP.new(importKey(self.serverPublicKey))
+
+    def secure_connection_setup(self) -> str:
+        """
+            does rsa keys exchange then does diffie hellman
+            algorithem to generate keys that will be used for
+            AES encryption
+        """
+
+        logging.debug("secure_connection_setup was called")
+
+        server_data = self.client_socket.recv(4096)
+        if server_data in ['', b'']:  # client disconnected
+            return "disconnected"  # client disconnected
+
+        # from now on the chat is rsa encrypted
+        # NOTE: should i check for rsa verification?
+        # start dffie hellman
+        logging.debug("start diffie hellman")
+        
+        privateKey = pyDH.DiffieHellman()
+        bytesPubKey = str(privateKey.gen_public_key()).encode('utf-8')
+        bytesPubKey = zlib.compress(bytesPubKey)
+        data_to_send = {'Action': 'DiffieHellman', 'PubKey': bytesPubKey}
+        data_to_send = msgpack.packb(data_to_send)
+        print(self.decrypyor.decrypt(server_data))
+        self.client_socket.send(
+            self.encryptor.encrypt(msgpack.packb(data_to_send)))
+        
+        logging.debug("end diffie hellman")
 
     def login(self, password):  # need rsa encryption
         """
@@ -103,5 +140,6 @@ class Client(object):
 
 if __name__ == '__main__':
     a = Client('127.0.0.2', 55555)
-    a.hand_shake()
+    a.handshake()
+    a.secure_connection_setup()
     a.login(123)

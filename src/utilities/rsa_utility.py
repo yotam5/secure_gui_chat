@@ -3,9 +3,12 @@ import binascii
 import base64
 import logging
 from hashlib import sha512
+from Crypto.Signature.pkcs1_15 import PKCS115_SigScheme
+from Crypto.Hash import SHA256
+from Crypto.PublicKey.RSA import importKey
 
 
-def generateKeyPair(length: int = 3072):
+def generateKeyPair(length: int = 4096):
     """
         generate rsa keypair
     """
@@ -48,21 +51,43 @@ def createAndSaveKeys(path: str):
     saveKeyToFile(key_pair.exportKey(),  f'{path}/private.pem')
 
 
-def create_signature(data: bytes, key_d, key_n):
-    """
-        signature data of bytes for rsa verification
-        key_d = keyPair.d
-        key_n = keyPair.n
-    """
-    hash = int.from_bytes(sha512(data).digest(), byteorder='big')
-    return pow(hash, key_d, key_n)
+def create_signature(data: bytes, keypair: RSA.RsaKey) -> bytes:
+    # Sign the message using the PKCS#1 v1.5 signature scheme (RSASP1)
+    hash = SHA256.new(data)
+    signer = PKCS115_SigScheme(keyPair)
+    signature = signer.sign(hash)
+    return signature
 
 
-def verify_signature(data: bytes, signature: bytes, key_e, key_n) -> bool:
+# Verify valid PKCS#1 v1.5 signature (RSAVP1)
+def verify_signature(data: bytes, signature: bytes, pubKey: bytes) -> bool:
     """
-        verify sign data sign with private key of rsa
-        key_e = keyPair.e
-        key_n = keyPair.n
+        data in bytes
+        signature in bytes
+        pubKey bytes = pubKey.exportKey("PEM")
     """
-    hash = int.from_bytes(sha512(data).digest(), byteorder='big')
-    return signature == pow(signature, key_e, key_n)
+    pubKey = RSA.importKey(pubKey)
+    hash = SHA256.new(data)
+    verifier = PKCS115_SigScheme(pubKey)
+    try:
+        verifier.verify(hash, signature)
+        return True
+    except Exception as e:  # InvalidSignature
+        return False
+
+
+if __name__ == "__main__":
+    import pyDH
+    from Crypto.Cipher import PKCS1_OAEP
+    import zlib
+    privateKey = pyDH.DiffieHellman()
+    bytesPubKey = zlib.compress(str(privateKey.gen_public_key()).encode('utf-8'))
+
+    keyPair = generateKeyPair()
+    clientPubBox = PKCS1_OAEP.new(importKey(keyPair.publickey().exportKey('PEM')))
+    cc = clientPubBox.encrypt(bytesPubKey)
+    print(cc)
+    """msg = 'a'*10_00000
+    sig = create_signature(msg.encode(), keyPair)
+    print(sig)
+    print(verify_signature(b'123', sig, keyPair.publickey().exportKey("PEM")))"""

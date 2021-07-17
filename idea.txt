@@ -1,0 +1,8 @@
+
+1-achive rsa connection between client and server and exchange keys
+
+2-the server will send over the socket a random salt
+
+3-the client will hash its password and use the salt for aes encryption
+
+4-the server does the same thing and if the two match then the correct password was used

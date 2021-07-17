@@ -62,7 +62,7 @@ class DataBaseUtility(object):
         """
             search user with corresponding values for login
         """
-        user_data = is_exist(user_id)
+        user_data = self.is_exist(user_id)
         if user_data:
             logging.debug(f"user_id {user_id} logged to the server")
             return True
