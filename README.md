@@ -14,7 +14,7 @@ python3 server.py
 ```
 
 ```bash
-python client_gui.py
+python3 client_gui.py
 ```
 
 ## Contributing
