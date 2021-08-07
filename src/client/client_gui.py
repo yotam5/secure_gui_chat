@@ -5,10 +5,10 @@ from PySide2.QtWidgets import QApplication, QMainWindow
 from main_ui import Ui_MainWindow
 import threading
 from functools import partial
-from Client import Client
-from src.utilities.config_utility import network_configuration_loader
-
 from time import sleep
+from client import Client
+
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -18,9 +18,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             partial(self.clickEffect, self.login_btn,
                     partial(self.switch_to_page_2)))
 
-        # my data
-        host, port = network_configuration_loader()
-        # self.client_inner = Client('Support', host, port)
+        # my data NOTE: to do login click
+        self.client_inner = None
         self.show()
 
     def clickEffect(self, btn, function, value=0):
@@ -29,11 +28,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         background-color: rgb(255, 255, 255,50);
         border-radius: 10px;
         """)
-        self.repaint()  # DAMN BOI
+        self.repaint()
         # wait_till(value)
-        # if self.client_inner.login('123'):
-        #    function()
+
         sleep(0.2)
+        # NOTE: if the password of username are empty need to handle
+        # NOTE: if they are wrong need to handle with pop up, probably
+
+        password = self.password_field.text()
+        username = self.username_field.text()
+        self.client_inner = Client(username=username)
+        result = self.client_inner.login(password)
         function()
 
     def login_task(self):

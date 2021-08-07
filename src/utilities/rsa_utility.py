@@ -14,6 +14,8 @@ def generateKeyPair(length: int = 4096):
     """
     return RSA.generate(length)
 
+# NOTE: can i use msgpack instead of base64 for key saving? need to check
+
 
 def rsaKeyToBase64String(key: bytes) -> str:
     return base64.b64encode(key).decode('ascii')
@@ -81,10 +83,12 @@ if __name__ == "__main__":
     from Crypto.Cipher import PKCS1_OAEP
     import zlib
     privateKey = pyDH.DiffieHellman()
-    bytesPubKey = zlib.compress(str(privateKey.gen_public_key()).encode('utf-8'))
+    bytesPubKey = zlib.compress(
+        str(privateKey.gen_public_key()).encode('utf-8'))
 
     keyPair = generateKeyPair()
-    clientPubBox = PKCS1_OAEP.new(importKey(keyPair.publickey().exportKey('PEM')))
+    clientPubBox = PKCS1_OAEP.new(
+        importKey(keyPair.publickey().exportKey('PEM')))
     cc = clientPubBox.encrypt(bytesPubKey)
     print(cc)
     """msg = 'a'*10_00000

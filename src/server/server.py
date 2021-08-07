@@ -42,8 +42,7 @@ class Server(object):
             f"{self.directory}/database.db")
         # idea, create a dict with usernames for msg
         signal.signal(signal.SIGINT, self.receive_sigint)
-        #self.login_name_q = queue.Queue()
-    
+        # self.login_name_q = queue.Queue()
 
     def load_keys(self):
         """
@@ -152,7 +151,10 @@ class Server(object):
         """
             handle the client data and stuff?
         """
-        secret = self.secure_connection_setup(client)
+        secret = self.secure_connection_setup(client)  # aes key
+
+        # from on here the chat between client and server is aes encrypted
+
         """serve_client = True
         myBox = PKCS1_OAEP.new(self.privateKey)  # use thread lock instead?
         clientPubBox = None
@@ -187,7 +189,7 @@ class Server(object):
                         if client_action in ['LOGIN', 'SIGN_UP']:
                             login_info = decrypted_data['Data']
                             if client_action == 'SIGN_UP':
-                                generated_salted_hash = hash_utility.generate_hash(
+                            generated_salted_hash = hash_utility.generate_hash(
                                     client_info['password'],)
                                 self.database_manager.add_user()
                             self.database_manager.login(
@@ -240,7 +242,8 @@ class Server(object):
         """
             add new client connection to the server
         """
-        while not self.exit:  # NOTE: need to think about how the server will close itself
+        while not self.exit:  
+            # NOTE: need to think about how the server will close itself
             client, addr = self.server_socket.accept()
             logging.debug("new connection have been established")
             self.clients.append(client)

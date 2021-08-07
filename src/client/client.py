@@ -7,21 +7,25 @@ import zlib
 
 # my own
 from src.utilities import rsa_utility
+from src.utilities import AESCipher
 
 # dependencies
 import msgpack
 import pyDH
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey.RSA import importKey
+from src.utilities.config_utility import network_configuration_loader
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class Client(object):
-    def __init__(self, localhost: str, port: int, user_id: str = "DUMMY"):
-        self.localhost: str = localhost
-        self.port: int = port
+    def __init__(self, user_id: str = "DUMMY"):
+        self.localhost: str = None
+        self.port: int = None
         self.client_socket = None
+        self.localhost, self.port = network_configuration_loader()
+        self.port = int(self.port)
         self.user_id = user_id
         self.logged = False
         self.publicKey = None
@@ -32,7 +36,7 @@ class Client(object):
         self.load_keys()
         self.decrypyor = PKCS1_OAEP.new(self.privateKey)
         self.encryptor = None
-        self.__aes256key = ""
+        self.__aes256key: bytes = ""
 
     def load_keys(self):
         """
@@ -58,7 +62,7 @@ class Client(object):
 
     def init_connection(self):
         """
-            init the client socket 
+            init the client socket
         """
         logging.debug("initing connection")
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -111,15 +115,18 @@ class Client(object):
         serverPubKey = int(zlib.decompress(serverPubKey).decode('utf-8'))
         secret = privateKey.gen_shared_key(serverPubKey)
         logging.debug(f"aes key is {secret}")
+        self.__aes256key = secret
         return secret
 
-    def login(self, password):  # need rsa encryption
+    def login(self, password) -> bool:  
         """
             login to server action
         """
         # need to go to user in db check if password and hash can verify
         data = {'Action': 'LOGIN', 'Data': {
-            "user_id": self.user_id, "password": password}}  # need to add verification of rsa
+            "user_id": self.user_id, "auth_data":
+                AESCipher.encrypt_AES_GCM(password, self.__aes256key)}}
+        # NOTE: add verification to rsa
         self.send_data(data, encoding=True)
         response = self.client_socket.recv(4096)
 
@@ -141,6 +148,9 @@ class Client(object):
     def recv(self):
         response = self.client_socket.recv(4096)
 
+    def run(self):  # NOTE: need to add thread for sending/reciving
+        pass
+
     def close(self):
         self.client_socket.close()
 
@@ -149,4 +159,4 @@ if __name__ == '__main__':
     a = Client('127.0.0.2', 55555)
     a.handshake()
     a.secure_connection_setup()
-    a.login(123)
+    #a.login(123)
