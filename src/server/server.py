@@ -6,6 +6,7 @@ import os.path
 import signal
 from sys import exit, getsizeof
 import zlib
+import queue
 
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
@@ -22,8 +23,9 @@ from src.utilities.config_utility import network_configuration_loader
 """
     TODO:
         LOGIN:
-            dffine hellman
-            challenge response
+            challenge response?
+            verification that client talks to server, by having the client
+            verify the sat sign with the server private key
 """
 logging.basicConfig(level=logging.DEBUG)
 # note when works remember to use the device ip and not ip in conf
@@ -40,6 +42,8 @@ class Server(object):
             f"{self.directory}/database.db")
         # idea, create a dict with usernames for msg
         signal.signal(signal.SIGINT, self.receive_sigint)
+        #self.login_name_q = queue.Queue()
+    
 
     def load_keys(self):
         """
@@ -148,7 +152,7 @@ class Server(object):
         """
             handle the client data and stuff?
         """
-        self.secure_connection_setup(client)
+        secret = self.secure_connection_setup(client)
         """serve_client = True
         myBox = PKCS1_OAEP.new(self.privateKey)  # use thread lock instead?
         clientPubBox = None
