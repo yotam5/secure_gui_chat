@@ -18,6 +18,10 @@ from src.utilities.config_utility import network_configuration_loader
 
 logging.basicConfig(level=logging.DEBUG)
 
+# NOTE: to add port forwarding automation
+# NOTE: to add 2 FA with email or etc
+# NOTE: to check auth using server perment pem?
+
 
 class Client(object):
     def __init__(self, user_id: str = "DUMMY"):
@@ -116,27 +120,28 @@ class Client(object):
         secret = privateKey.gen_shared_key(serverPubKey)
         logging.debug(f"aes key is {secret}")
         self.__aes256key = secret
-        return secret
+        return secret[:32]  # 256 bit key
 
-    def login(self, password) -> bool:  
+    def login(self, password) -> bool:
         """
             login to server action
         """
         # need to go to user in db check if password and hash can verify
         data = {'Action': 'LOGIN', 'Data': {
-            "user_id": self.user_id, "auth_data":
-                AESCipher.encrypt_AES_GCM(password, self.__aes256key)}}
+            "user_id": self.user_id, "auth_data": password}}
+        data = msgpack.dumps(data)
+        data = AESCipher.encrypt_AES_GCM(data, self.__aes256key)
         # NOTE: add verification to rsa
         self.send_data(data, encoding=True)
         response = self.client_socket.recv(4096)
-
+        
     def sign_up(self):
         """
             handle steps for account creation
         """
         pass
 
-    def send_data(self, data, encoding=False):
+    def send_data(self, data, encrypt=True):
         """
             send data to server
         """
@@ -156,7 +161,7 @@ class Client(object):
 
 
 if __name__ == '__main__':
-    a = Client('127.0.0.2', 55555)
+    a = Client("jeff")
     a.handshake()
     a.secure_connection_setup()
-    #a.login(123)
+    # a.login(123)

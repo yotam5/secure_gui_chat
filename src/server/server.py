@@ -15,6 +15,7 @@ import pyDH
 import msgpack
 
 # my own
+from src.utilities import AESCipher
 from DataBaseUtility import DataBaseManager
 from src.utilities import rsa_utility
 from src.utilities import hash_utility
@@ -32,6 +33,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class Server(object):
+    """
+        main server class
+    """
+
     def __init__(self):
         self.localhost, self.port = network_configuration_loader()
         self.clients = []
@@ -145,7 +150,7 @@ class Server(object):
         clientPubKey = int(zlib.decompress(clientPubKey).decode('utf-8'))
         secret = privateKey.gen_shared_key(clientPubKey)
         logging.debug(f"aes key is {secret}")
-        return secret
+        return secret[:32]  # 256 bit aes key
 
     def client_handle(self, client):
         """
@@ -155,12 +160,7 @@ class Server(object):
 
         # from on here the chat between client and server is aes encrypted
 
-        """serve_client = True
-        myBox = PKCS1_OAEP.new(self.privateKey)  # use thread lock instead?
-        clientPubBox = None
-        exchanged = False
-        decrypted_data = None
-        aes_key = None
+        serve_client = True
 
         # stage 1: rsa key exchange
         # stage 2: dffie hellman algorithm for aes keys
@@ -172,35 +172,27 @@ class Server(object):
                 serve_client = False
             else:
                 logging.debug(f"client data size is {getsizeof(client_data)}")
-                if clientPubBox:
-                    logging.debug(
-                        "the client encrypted data is being decrypted")
-                    decrypted_data = msgpack.loads(myBox.decrypt(client_data))
-                else:
-                    decrypted_data = msgpack.loads(client_data)
-
-                logging.debug(decrypted_data)
+                client_data = msgpack.loads(client_data)
+                client_data = decrypt_AES_GCM(client_data, client_data)
                 logging.debug("handling data result")
 
-                data_dict_keys = decrypted_data.keys()
+                data_dict_keys = client_data.keys()
                 if 'Action' in data_dict_keys:
-                    client_action = decrypted_data['Action']
-                    if exchanged:  # if the chat is being encrypted y'know
-                        if client_action in ['LOGIN', 'SIGN_UP']:
-                            login_info = decrypted_data['Data']
-                            if client_action == 'SIGN_UP':
+                    client_action = client_data['Action']
+                    if client_action in ['LOGIN', 'SIGN_UP']:
+                        login_info = client_data['Data']
+                        if client_action == 'SIGN_UP':
                             generated_salted_hash = hash_utility.generate_hash(
-                                    client_info['password'],)
-                                self.database_manager.add_user()
+                                client_info['password'])
+                            self.database_manager.add_user()
                             self.database_manager.login(
                                 login_info['user_id'], login_info['password'])
-
                     else:
                         if client_action == 'EXCHANGE':
                             clientPubKey, clientPubBox = self.handle_exchange(
-                                decrypted_data, client)
+                                client_data, client)
                             exchanged = True
-        logging.debug(f"client disconnected")"""
+        logging.debug(f"client disconnected")
 
         exit(0)  # terminate thread
 
@@ -242,7 +234,7 @@ class Server(object):
         """
             add new client connection to the server
         """
-        while not self.exit:  
+        while not self.exit:
             # NOTE: need to think about how the server will close itself
             client, addr = self.server_socket.accept()
             logging.debug("new connection have been established")

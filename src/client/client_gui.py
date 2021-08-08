@@ -37,9 +37,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         password = self.password_field.text()
         username = self.username_field.text()
-        self.client_inner = Client(username=username)
+        self.client_inner = Client(username=username)  # connect to server
+        # trying to auth with password
         result = self.client_inner.login(password)
-        function()
+        if result:  # if auth was affermtive
+            function()
 
     def login_task(self):
         pass

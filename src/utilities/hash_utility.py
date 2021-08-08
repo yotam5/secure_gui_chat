@@ -40,7 +40,9 @@ def generate_hash(password: str, salt_size: int = 32, length: int = 64):
     )
     return key, salt
 
-res = generate_hash('123')
-res = res[0]
-res = res.decode('ISO-8859-1')
-print(res.encode('ISO-8859-1'))
+
+if __name__ == "__main__":
+    res = generate_hash('123')
+    res = res[0]
+    res = res.decode('ISO-8859-1')
+    print(res.encode('ISO-8859-1'))
