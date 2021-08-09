@@ -15,14 +15,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
 
         self.login_btn.clicked.connect(
-            partial(self.clickEffect, self.login_btn,
+            partial(self.login_to_server, self.login_btn,
                     partial(self.switch_to_page_2)))
-
         # my data NOTE: to do login click
-        self.client_inner = None
+        self.client_inner = Client()
         self.show()
+        self.connected_to_server = False
 
-    def clickEffect(self, btn, function, value=0):
+    def login_to_server(self, btn, function, value=0):
+        original_style = btn.styleSheet()
         btn.setStyleSheet(""" border: 2px solid white;
         color: rgb(138, 226, 52);
         background-color: rgb(255, 255, 255,50);
@@ -37,13 +38,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         password = self.password_field.text()
         username = self.username_field.text()
-        self.client_inner = Client(username=username)  # connect to server
-        # trying to auth with password
-        result = self.client_inner.login(password)
-        if result:  # if auth was affermtive
-            function()
+        if not self.connected_to_server:
+            try:
+                self.client_inner.secure_connection()
+                self.connected_to_server = True
+            except Exception as e:
+                print("error while connecting to server")
 
-    def login_task(self):
+        # trying to auth with password
+        if self.connected_to_server:
+            self.client_inner.set_username(username)
+            result: bool = self.client_inner.login(password)
+            if result:  # if auth was affermtive
+                function()
+        btn.setStyleSheet(original_style)  # if the login, recolor logbtn
+
+    def signup_to_server(self):
         pass
 
     def switch_to_page_2(self, function=False):

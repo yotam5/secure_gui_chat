@@ -66,18 +66,14 @@ class DataBaseManager(object):
         """
             search user with corresponding values for login
         """
-        decode_keys = ["salt", "hashed"]
-
         user_data = self.is_exist(user_id)
         if user_data:
             user_data = dict(user_data)
-            print(user_data)
-            for i in user_data:
-                print(type(i))
+            logging.debug(user_data)
             hashed_password = user_data["hashed"]
             salt = user_data['salt']
-            print(hashed_password)
-            print(salt)
+            logging.debug(hashed_password)
+            logging.debug(salt)
             if hash_utility.hash_verify(hashed_password, salt, password):
                 logging.debug(f"user_id {user_id} logged to the server")
                 return True
@@ -101,7 +97,6 @@ class DataBaseManager(object):
 
 
 if __name__ == '__main__':
-    print("aa")
     test = DataBaseManager()
     test.remove_user("yoram")
     hashed, salt = hash_utility.generate_hash('123')
@@ -109,4 +104,4 @@ if __name__ == '__main__':
     print('*'*120)
     print(salt)
     test.add_user("yoram", hashed, salt, b'key_idk', 0)
-    test.login('yoram', '123')
+    print(test.login('yoram', '1234'))

@@ -54,10 +54,10 @@ class Server(object):
             load the keys of the server or create them
             if it doesnt exist
         """
-        """if not os.path.exists('./private.pem') or \
+        if not os.path.exists('./private.pem') or \
                 not os.path.exists('./public.pem'):
-            logging.debug("keys not found so will be created")"""
-        rsa_utility.createAndSaveKeys(self.directory)
+            logging.debug("keys not found so will be created")
+            rsa_utility.createAndSaveKeys(self.directory)
         logging.debug("loading keys")
         self.publicKey = rsa_utility.loadKeyFromFile(
             f'{self.directory}/public.pem')
@@ -174,7 +174,6 @@ class Server(object):
             if client_data in ['', b'']:  # client disconnected
                 serve_client = False
             else:
-                logging.debug(f"client data size is {getsizeof(client_data)}")
                 client_data = AESCipher.decrypt_data_from_bytes(
                     client_data, secret)
                 logging.debug("handling data result")
@@ -196,10 +195,15 @@ class Server(object):
                         login_result = self.handle_login(
                             user_id, user_password)
                         logging.debug(f"the login result is {login_result}")
+                        client.send(msgpack.dumps(login_result))
+
         logging.debug(f"client disconnected")
 
         exit(0)  # terminate thread
 
+    def handle_protocol(self, data: dict):
+        pass
+    
     def handle_signup(user_id: str, password: str) -> bool:
         """
             create a new user into the database

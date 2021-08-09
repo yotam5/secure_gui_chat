@@ -35,7 +35,6 @@ class Client(object):
         self.publicKey = None
         self.privateKey = None
         self.serverPublicKey = None
-        self.init_connection()
         self.directory = os.path.dirname(os.path.realpath(__file__))
         self.load_keys()
         self.decrypyor = PKCS1_OAEP.new(self.privateKey)
@@ -47,22 +46,20 @@ class Client(object):
             load the client keys if created,
             if not create and loads
         """
-        """if not os.path.exists('./private.pem') or \
+        if not os.path.exists('./private.pem') or \
                 not os.path.exists('./public.pem'):
-            logging.debug("keys not found so will be created")"""
-        rsa_utility.createAndSaveKeys(self.directory)
+            logging.debug("keys not found so will be created")
+            rsa_utility.createAndSaveKeys(self.directory)
         logging.debug("loading keys")
         self.publicKey = rsa_utility.loadKeyFromFile(
             f'{self.directory}/public.pem')
         self.privateKey = rsa_utility.loadKeyFromFile(
             f'{self.directory}/private.pem')
-        """if os.path.exists('./server.pem'): # NOTE: is it even usful cuz of
-         handshake?
+        if os.path.exists('./server.pem'):
             logging.debug("server key was found and now is loaded")
             self.serverPublicKey = rsa_utility.loadKeyFromFile('server.pem')
         else:
             logging.debug("server key was not found, handshake now being held")
-        """
 
     def init_connection(self):
         """
@@ -71,6 +68,11 @@ class Client(object):
         logging.debug("initing connection")
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.localhost, self.port))
+
+    def secure_connection(self):
+        self.init_connection()
+        self.handshake()
+        self.secure_connection_setup()
 
     def handshake(self):
         """
@@ -127,11 +129,13 @@ class Client(object):
             login to server action
         """
         # need to go to user in db check if password and hash can verify
+        logging.debug(f"aes key is {self.__aes256key}")
         data = {'Action': 'LOGIN', 'Data': {
             "user_id": self.user_id, "password": password}}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         self.client_socket.send(data)
         response = self.client_socket.recv(4096)
+        return msgpack.loads(response)
 
     def sign_up(self, password: str) -> bool:
         """
@@ -148,10 +152,10 @@ class Client(object):
 
     def set_username(self, username: str):
         # set the username if not logged into the server
-        pass
+        self.user_id = username
 
     def set_password(self, password: str):
-        # set the password
+        # set the password, not needed?
         pass
 
     def close(self):
