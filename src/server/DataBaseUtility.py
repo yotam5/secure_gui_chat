@@ -33,7 +33,7 @@ class DataBaseManager(object):
         binPubKey = sqlite3.Binary(pubkey)
 
         template = """INSERT INTO users_data
-                          (id, salt, hashed, public_key, online) 
+                          (id, salt, hashed, public_key, online)
                           VALUES (?, ?, ?, ?, ?);"""
         data_tuple = (user_id, binSalt, binHash, binPubKey, 1)
         self.__cursor.execute(template, data_tuple)
@@ -53,9 +53,11 @@ class DataBaseManager(object):
             return True
         logging.debug(f"cant delete user {user_id}, the user was not found")
         return False
-    
-    def logout(self, id: str): # set online to 0
-        pass
+
+    def logout(self, user_id: str):  # set online to 0
+        self.__cursor.execute(
+            f"UPDATE users_data SET online='0' WHERE id='{user_id}'")
+        self.__conn.commit()
 
     def is_exist(self, user_id, selection="*"):
         """
@@ -80,10 +82,17 @@ class DataBaseManager(object):
             if hash_utility.hash_verify(hashed_password, salt, password):
                 logging.debug(f"user_id {user_id} logged to the server")
                 self.__cursor.execute(
-                    f"UPDATE users_data SET online = '1' WHERE id = '{user_id}'")
+                    f"UPDATE users_data SET online='1' WHERE id='{user_id}'")
                 self.__conn.commit()
                 return True
         return False
+
+    def is_online(self, user_id: str) -> bool:
+        exist = self.is_exist(user_id, selection="online")
+        online = False
+        if exist and dict(exist)['online'] == 1:
+            online = True
+        return online
 
     def close(self):
         """
@@ -104,10 +113,6 @@ class DataBaseManager(object):
 
 if __name__ == '__main__':
     test = DataBaseManager()
-    test.remove_user("yoram")
-    hashed, salt = hash_utility.generate_hash('123')
-    print(hashed)
-    print('*'*120)
-    print(salt)
-    test.add_user("yoram", hashed, salt, b'key_idk', 0)
-    print(test.login('yoram', '1234'))
+    print(test.login('yoram', '123'))
+    print(f"yoram online: {test.is_online('yoram')}")
+    print(f"jeff online: {test.is_online('jeff')}")

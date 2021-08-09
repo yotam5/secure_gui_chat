@@ -154,6 +154,16 @@ class Client(object):
     def run(self):  # NOTE: need to add thread for sending/reciving
         pass
 
+    def is_online(self, user_id: str):
+        """ 
+            ask server for user id and return boolean
+            of server answer
+        """
+        data = ['Action': 'SEARCH', 'Data':{'user_id': user_id}]
+        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
+        self.client_socket.send(data)
+        return self.client_socket.recv(4096)
+
     def set_username(self, username: str):
         # set the username if not logged into the server
         self.user_id = username
@@ -168,6 +178,6 @@ class Client(object):
 
 if __name__ == '__main__':
     a = Client("yoram")
-    a.handshake()
-    a.secure_connection_setup()
+    a.secure_connection()
     a.login("123")
+    print(a.is_online('yoram'))

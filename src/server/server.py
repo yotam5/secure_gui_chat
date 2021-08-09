@@ -168,7 +168,8 @@ class Server(object):
         # stage 1: rsa key exchange
         # stage 2: dffie hellman algorithm for aes keys
         # stage 3: challange response for login
-
+        function_dict = {'funcname': 'func name'}
+        # can alll with dict['key'](param)
         while serve_client:
             client_data = client.recv(4096)
             if client_data in ['', b'']:  # client disconnected
