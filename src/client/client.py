@@ -141,8 +141,12 @@ class Client(object):
         """
             handle steps for account creation
         """
-        data = {'Action': 'SIGN_UP', 'DATA': {
+        data = {'Action': 'SIGN_UP', 'Data': {
             "user_id": self.user_id, "password": password}}
+        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
+        self.client_socket.send(data)
+        answer: bool = self.client_socket.recv(4096)
+        return msgpack.loads(answer)
 
     def recv(self):
         response = self.client_socket.recv(4096)

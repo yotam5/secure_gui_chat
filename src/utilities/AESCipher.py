@@ -52,7 +52,8 @@ def decrypt_data_from_bytes(data: bytes, key: bytes):
 
 if __name__ == "__main__":
     import msgpack
-    kk = 'dacfbd3c78ec70d69ef6946655bc2427d3798eb91c32b9417f0bda71fdbc3a2a'[:32]
+    kk = 'dacfbd3c78ec70d69ef6946655bc2427d3798eb91c32b9417f0bda71fdbc3a2a'[
+        :32]
     print(kk)
     kk = kk.encode('utf-8')
     gg = encrypt_AES_GCM(b'hello world', kk)

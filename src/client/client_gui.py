@@ -15,14 +15,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
 
         self.login_btn.clicked.connect(
-            partial(self.login_to_server, self.login_btn,
+            partial(self.login_signup_to_server, self.login_btn,
                     partial(self.switch_to_page_2)))
+                    
+        self.sign_up_btn.clicked.connect(
+            partial(self.login_signup_to_server, self.sign_up_btn,
+                    partial(self.switch_to_page_2)))
+
         # my data NOTE: to do login click
         self.client_inner = Client()
         self.show()
         self.connected_to_server = False
 
-    def login_to_server(self, btn, function, value=0):
+    def login_signup_to_server(self, btn, function):
         original_style = btn.styleSheet()
         btn.setStyleSheet(""" border: 2px solid white;
         color: rgb(138, 226, 52);
@@ -30,7 +35,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         border-radius: 10px;
         """)
         self.repaint()
-        # wait_till(value)
 
         sleep(0.2)
         # NOTE: if the password of username are empty need to handle
@@ -48,13 +52,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # trying to auth with password
         if self.connected_to_server:
             self.client_inner.set_username(username)
-            result: bool = self.client_inner.login(password)
+            if btn.text() == 'Login':
+                result: bool = self.client_inner.login(password)
+            elif btn.text() == 'Sign Up':
+                result: bool = self.client_inner.sign_up(password)
             if result:  # if auth was affermtive
                 function()
         btn.setStyleSheet(original_style)  # if the login, recolor logbtn
-
-    def signup_to_server(self):
-        pass
 
     def switch_to_page_2(self, function=False):
         # if function and function():

@@ -53,6 +53,9 @@ class DataBaseManager(object):
             return True
         logging.debug(f"cant delete user {user_id}, the user was not found")
         return False
+    
+    def logout(self, id: str): # set online to 0
+        pass
 
     def is_exist(self, user_id, selection="*"):
         """
@@ -76,6 +79,9 @@ class DataBaseManager(object):
             logging.debug(salt)
             if hash_utility.hash_verify(hashed_password, salt, password):
                 logging.debug(f"user_id {user_id} logged to the server")
+                self.__cursor.execute(
+                    f"UPDATE users_data SET online = '1' WHERE id = '{user_id}'")
+                self.__conn.commit()
                 return True
         return False
 

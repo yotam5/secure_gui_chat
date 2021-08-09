@@ -184,12 +184,12 @@ class Server(object):
                     login_info = client_data['Data']
                     user_id = login_info['user_id']
                     user_password = login_info['password']
+
                     if client_action == 'SIGN_UP':
-                        generated_salted_hash = hash_utility.generate_hash(
-                            client_info['password'])
-                        self.database_manager.add_user()
-                        self.database_manager.login(
-                            login_info['user_id'], login_info['password'])
+                        signup_result: bool = self.handle_signup(
+                            user_id, user_password)
+                        client.send(msgpack.dumps(signup_result))
+
                     else:  # login
                         logging.debug("client trying to login")
                         login_result = self.handle_login(
@@ -203,8 +203,8 @@ class Server(object):
 
     def handle_protocol(self, data: dict):
         pass
-    
-    def handle_signup(user_id: str, password: str) -> bool:
+
+    def handle_signup(self, user_id: str, password: str) -> bool:
         """
             create a new user into the database
         """
@@ -212,7 +212,8 @@ class Server(object):
         logging.debug("client signup called")
         if not self.database_manager.is_exist(user_id):
             logging.debug(f"the user {user_id} can be created")
-            self.database_manager.add_user(user_id, key, salt)
+            hashed, salt = hash_utility.generate_hash(password)
+            self.database_manager.add_user(user_id, hashed, salt, status=1)
             signup_result = True
         else:
             logging.debug(f"the user {user_id} already exists")
