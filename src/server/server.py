@@ -77,9 +77,13 @@ class Server(object):
         """
             init server connection
         """
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind((str(self.localhost), int(self.port)))
-        self.server_socket.listen()
+        try:
+            self.server_socket = socket.socket(
+                socket.AF_INET, socket.SOCK_STREAM)
+            self.server_socket.bind((str(self.localhost), int(self.port)))
+            self.server_socket.listen()
+        except socket.error as e:
+            logging.debug(f"socket exception in init_connection: {e}")
 
     def init_serving(self):
         """
@@ -97,7 +101,7 @@ class Server(object):
         # broadcast exit?
         self.server_socket.close()
 
-    def handshake(self, client_data: dict, client) -> bytes:
+    def handshake(self, client_data: dict, client: socket.socket) -> bytes:
         """
             rsa handshake
         """
@@ -109,7 +113,7 @@ class Server(object):
         client.send(msgpack.packb(data))
         return client_pubKey
 
-    def secure_connection_setup(self, client) -> str:
+    def secure_connection_setup(self, client: socket.socket) -> str:
         """
             does rsa keys exchange then does diffie hellman
             algorithem to generate keys that will be used for
@@ -152,16 +156,15 @@ class Server(object):
         logging.debug(f"aes key is {secret}")
         return secret[:32]  # 256 bit aes key
 
-    def client_handle(self, client):
+    def client_handle(self, client: socket.socket):
         """
             handle the client data and stuff?
         """
         secret = self.secure_connection_setup(client)  # aes key
-
+        secret = secret.encode('utf-8')
         # from on here the chat between client and server is aes encrypted
 
         serve_client = True
-
         # stage 1: rsa key exchange
         # stage 2: dffie hellman algorithm for aes keys
         # stage 3: challange response for login
@@ -172,49 +175,55 @@ class Server(object):
                 serve_client = False
             else:
                 logging.debug(f"client data size is {getsizeof(client_data)}")
-                client_data = msgpack.loads(client_data)
-                client_data = decrypt_AES_GCM(client_data, client_data)
+                client_data = AESCipher.decrypt_data_from_bytes(
+                    client_data, secret)
                 logging.debug("handling data result")
 
                 data_dict_keys = client_data.keys()
-                if 'Action' in data_dict_keys:
-                    client_action = client_data['Action']
-                    if client_action in ['LOGIN', 'SIGN_UP']:
-                        login_info = client_data['Data']
-                        if client_action == 'SIGN_UP':
-                            generated_salted_hash = hash_utility.generate_hash(
-                                client_info['password'])
-                            self.database_manager.add_user()
-                            self.database_manager.login(
-                                login_info['user_id'], login_info['password'])
-                    else:
-                        if client_action == 'EXCHANGE':
-                            clientPubKey, clientPubBox = self.handle_exchange(
-                                client_data, client)
-                            exchanged = True
+                client_action = client_data['Action']
+                if client_action in ['LOGIN', 'SIGN_UP']:
+                    login_info = client_data['Data']
+                    user_id = login_info['user_id']
+                    user_password = login_info['password']
+                    if client_action == 'SIGN_UP':
+                        generated_salted_hash = hash_utility.generate_hash(
+                            client_info['password'])
+                        self.database_manager.add_user()
+                        self.database_manager.login(
+                            login_info['user_id'], login_info['password'])
+                    else:  # login
+                        logging.debug("client trying to login")
+                        login_result = self.handle_login(
+                            user_id, user_password)
+                        logging.debug(f"the login result is {login_result}")
         logging.debug(f"client disconnected")
 
         exit(0)  # terminate thread
 
-    def handle_signup(user_id, password):
+    def handle_signup(user_id: str, password: str) -> bool:
         """
             create a new user into the database
         """
+        signup_result: bool = False
         logging.debug("client signup called")
         if not self.database_manager.is_exist(user_id):
-            logging.debug(f"the user {user_id} can be created")\
-
+            logging.debug(f"the user {user_id} can be created")
             self.database_manager.add_user(user_id, key, salt)
-        logging.debug(f"the user {user_id} already exists")
+            signup_result = True
+        else:
+            logging.debug(f"the user {user_id} already exists")
+        return signup_result
 
-    def handle_login(self):
+    def handle_login(self, user_id: str, password: str):
         """
             handle login into the server, correct user_id and password
         """
         logging.debug("client login handle called")
-        pass
 
-    def handle_exchange(self, client_data: dict, client):
+        login_result: bool = self.database_manager.login(user_id, password)
+        return login_result
+
+    def handle_exchange(self, client_data: dict, client: socket.socket):
         """
             handle rsa keys exchange with client
         """

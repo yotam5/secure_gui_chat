@@ -35,14 +35,15 @@ def encrypt_data_to_bytes(data, key: bytes) -> bytes:
         then returned the byted encrypted data(the tuple for auth)
     """
     data = msgpack.dumps(data)
-    data = AESCipher.encrypt_AES_GCM(data, key)
+    data = encrypt_AES_GCM(data, key)
     return msgpack.dumps(data)
 
 
 def decrypt_data_from_bytes(data: bytes, key: bytes):
     """
         get key and the encrypted data as bytes(that is the tuple)
-        and return the decrypted value
+        and return the decrypted value that is any built in 
+        data type
     """
     data = msgpack.loads(data)
     data = decrypt_AES_GCM(data, key)

@@ -119,7 +119,7 @@ class Client(object):
         serverPubKey = int(zlib.decompress(serverPubKey).decode('utf-8'))
         secret = privateKey.gen_shared_key(serverPubKey)
         logging.debug(f"aes key is {secret}")
-        self.__aes256key = secret
+        self.__aes256key = secret[:32].encode('utf-8')
         return secret[:32]  # 256 bit key
 
     def login(self, password) -> bool:
@@ -128,27 +128,17 @@ class Client(object):
         """
         # need to go to user in db check if password and hash can verify
         data = {'Action': 'LOGIN', 'Data': {
-            "user_id": self.user_id, "auth_data": password}}
-        data = msgpack.dumps(data)
-        data = AESCipher.encrypt_AES_GCM(data, self.__aes256key)
-        # NOTE: add verification to rsa
-        self.send_data(data, encoding=True)
+            "user_id": self.user_id, "password": password}}
+        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
+        self.client_socket.send(data)
         response = self.client_socket.recv(4096)
-        
-    def sign_up(self):
+
+    def sign_up(self, password: str) -> bool:
         """
             handle steps for account creation
         """
-        pass
-
-    def send_data(self, data, encrypt=True):
-        """
-            send data to server
-        """
-        data = msgpack.packb(data)
-        if encoding:
-            data = self.encryptor.encrypt(data)
-        self.client_socket.send(data)
+        data = {'Action': 'SIGN_UP', 'DATA': {
+            "user_id": self.user_id, "password": password}}
 
     def recv(self):
         response = self.client_socket.recv(4096)
@@ -156,12 +146,20 @@ class Client(object):
     def run(self):  # NOTE: need to add thread for sending/reciving
         pass
 
+    def set_username(self, username: str):
+        # set the username if not logged into the server
+        pass
+
+    def set_password(self, password: str):
+        # set the password
+        pass
+
     def close(self):
         self.client_socket.close()
 
 
 if __name__ == '__main__':
-    a = Client("jeff")
+    a = Client("yoram")
     a.handshake()
     a.secure_connection_setup()
-    # a.login(123)
+    a.login("123")

@@ -1,6 +1,8 @@
 import sqlite3
 import os.path
 import logging
+from src.utilities import hash_utility
+
 # TODO: FIX user_id to id and the insert of hash salt etc
 # TODO: for bytes can do encode and decode
 
@@ -26,13 +28,15 @@ class DataBaseManager(object):
             logging.debug(f"user with id {user_id} exists")
             return False
 
-        data_for_insertion = \
-            (f"'{user_id}', '{salt.decode()}','"
-             f"{hashed_password.decode()}','{pubkey.decode()}',{status}")
+        binSalt = sqlite3.Binary(salt)
+        binHash = sqlite3.Binary(hashed_password)
+        binPubKey = sqlite3.Binary(pubkey)
 
-        print(data_for_insertion)
-        self.__cursor.execute(
-            f"INSERT INTO users_data VALUES ({data_for_insertion})")
+        template = """INSERT INTO users_data
+                          (id, salt, hashed, public_key, online) 
+                          VALUES (?, ?, ?, ?, ?);"""
+        data_tuple = (user_id, binSalt, binHash, binPubKey, 1)
+        self.__cursor.execute(template, data_tuple)
         self.__conn.commit()
         logging.debug(f"added user {user_id}")
         return True
@@ -58,14 +62,25 @@ class DataBaseManager(object):
             f"SELECT {selection} FROM users_data WHERE id LIKE '{user_id}'")
         return result.fetchone()
 
-    def login(self, user_id, password) -> bool:
+    def login(self, user_id: str, password: str) -> bool:
         """
             search user with corresponding values for login
         """
+        decode_keys = ["salt", "hashed"]
+
         user_data = self.is_exist(user_id)
         if user_data:
-            logging.debug(f"user_id {user_id} logged to the server")
-            return True
+            user_data = dict(user_data)
+            print(user_data)
+            for i in user_data:
+                print(type(i))
+            hashed_password = user_data["hashed"]
+            salt = user_data['salt']
+            print(hashed_password)
+            print(salt)
+            if hash_utility.hash_verify(hashed_password, salt, password):
+                logging.debug(f"user_id {user_id} logged to the server")
+                return True
         return False
 
     def close(self):
@@ -87,8 +102,11 @@ class DataBaseManager(object):
 
 if __name__ == '__main__':
     print("aa")
-    test = DataBaseUtility()
-    test.add_user("yotam", b'123', b'123', b'key_idk', 0)
-    user_data = test.is_exist('yotam')
-    print(user_data['salt'])
-    print("end")
+    test = DataBaseManager()
+    test.remove_user("yoram")
+    hashed, salt = hash_utility.generate_hash('123')
+    print(hashed)
+    print('*'*120)
+    print(salt)
+    test.add_user("yoram", hashed, salt, b'key_idk', 0)
+    test.login('yoram', '123')

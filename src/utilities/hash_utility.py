@@ -3,7 +3,7 @@ import hashlib
 from os import urandom
 
 
-def hashVerify(key: bytes, salt: bytes, password: str, length=64):
+def hash_verify(key: bytes, salt: bytes, password: str, length=64):
     """[verify password with stored hash, need user salt and entered password]
 
     Args:
@@ -17,7 +17,7 @@ def hashVerify(key: bytes, salt: bytes, password: str, length=64):
     """
     return hashlib.pbkdf2_hmac('sha512',
                                password.encode('ISO-8859-1'),
-                               salt, 100_000, dklen=length) == password
+                               salt, 100_000, dklen=length) == key
 
 
 def generate_hash(password: str, salt_size: int = 32, length: int = 64):
@@ -42,7 +42,9 @@ def generate_hash(password: str, salt_size: int = 32, length: int = 64):
 
 
 if __name__ == "__main__":
-    res = generate_hash('123')
-    res = res[0]
-    res = res.decode('ISO-8859-1')
-    print(res.encode('ISO-8859-1'))
+    import msgpack
+    hasha, salt = generate_hash('123')
+    print(hash_verify(hasha, salt,"124"))
+    print(hasha)
+    print(msgpack.dumps(hasha))
+
