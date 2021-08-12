@@ -70,6 +70,10 @@ class Client(object):
         self.client_socket.connect((self.localhost, self.port))
 
     def secure_connection(self):
+        """
+            create secure connection to the server that at
+            the end the communication is based on aes encryption
+        """
         self.init_connection()
         self.handshake()
         self.secure_connection_setup()
@@ -155,14 +159,18 @@ class Client(object):
         pass
 
     def is_online(self, user_id: str):
-        """ 
+        """
             ask server for user id and return boolean
             of server answer
         """
-        data = {'Action': 'SEARCH', 'Data':{'user_id': user_id}}
+        data = {'Action': 'SEARCH', 'Data': {'user_id': user_id}}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         self.client_socket.send(data)
-        return self.client_socket.recv(4096)
+
+        answer = self.client_socket.recv(4096)
+        logging.debug(f"asked server if {user_id} is online: {answer}")
+        answer = AESCipher.decrypt_data_from_bytes(answer, self.__aes256key)
+        return answer
 
     def set_username(self, username: str):
         # set the username if not logged into the server
@@ -171,6 +179,9 @@ class Client(object):
     def set_password(self, password: str):
         # set the password, not needed?
         pass
+
+    def get_username(self) -> str:
+        return self.user_id
 
     def close(self):
         self.client_socket.close()

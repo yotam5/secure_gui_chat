@@ -25,9 +25,10 @@ from src.utilities.config_utility import network_configuration_loader
 """
     TODO:
         LOGIN:
-            challenge response?
-            verification that client talks to server, by having the client
-            verify the sat sign with the server private key
+            !verification that client talks to server, by having the client
+            verify the sat sign with the server private key!
+            ! create in client send/receive thread and also encrypt all data
+                that is being sent !
 """
 logging.basicConfig(level=logging.DEBUG)
 # note when works remember to use the device ip and not ip in conf
@@ -198,6 +199,13 @@ class Server(object):
                             user_id, user_password)
                         logging.debug(f"the login result is {login_result}")
                         client.send(msgpack.dumps(login_result))
+                if client_action == 'SEARCH':
+                    data = client_data['Data']
+                    logging.debug(
+                        f"client trying to search user {data['user_id']}")
+                    result = self.database_manager.is_online(data['user_id'])
+                    result = AESCipher.encrypt_data_to_bytes(result, secret)
+                    client.send(result)
 
         logging.debug(f"client disconnected")
 

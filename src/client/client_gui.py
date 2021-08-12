@@ -8,6 +8,11 @@ from functools import partial
 from time import sleep
 from client import Client
 
+"""
+    TODO:
+        handle the chat and send according to the combobox selction
+"""
+
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -31,9 +36,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
             handle enter key event to search a user
         """
-        
+        searched_usr_id = self.lineEdit.text()
+        if searched_usr_id != self.client_inner.get_username():
+            online = self.client_inner.is_online(searched_usr_id)
+            if online:
+                AllItems = [self.comboBox.itemText(i) for i in
+                            range(self.comboBox.count())]
+                if searched_usr_id not in AllItems:
+                    self.comboBox.addItem(searched_usr_id)
 
     def login_signup_to_server(self, btn, function):
+        """
+            handle login and sign up buttons presses
+        """
         original_style = btn.styleSheet()
         btn.setStyleSheet(""" border: 2px solid white;
         color: rgb(138, 226, 52);
