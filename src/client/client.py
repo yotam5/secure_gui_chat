@@ -159,7 +159,7 @@ class Client(object):
             ask server for user id and return boolean
             of server answer
         """
-        data = ['Action': 'SEARCH', 'Data':{'user_id': user_id}]
+        data = {'Action': 'SEARCH', 'Data':{'user_id': user_id}}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         self.client_socket.send(data)
         return self.client_socket.recv(4096)

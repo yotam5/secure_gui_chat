@@ -7,6 +7,7 @@ import signal
 from sys import exit, getsizeof
 import zlib
 import queue
+import re
 
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
@@ -213,9 +214,10 @@ class Server(object):
         logging.debug("client signup called")
         if not self.database_manager.is_exist(user_id):
             logging.debug(f"the user {user_id} can be created")
-            hashed, salt = hash_utility.generate_hash(password)
-            self.database_manager.add_user(user_id, hashed, salt, status=1)
-            signup_result = True
+            if Server.strong_password(password):
+                hashed, salt = hash_utility.generate_hash(password)
+                self.database_manager.add_user(user_id, hashed, salt, status=1)
+                signup_result = True
         else:
             logging.debug(f"the user {user_id} already exists")
         return signup_result
@@ -238,12 +240,18 @@ class Server(object):
         clientPubBox = PKCS1_OAEP.new(importKey(clientPubKey))
         return clientPubKey, clientPubBox
 
+    @staticmethod
+    def strong_password(password: str) -> bool:
+        result = re.match(
+            '((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,30})',
+            password)
+        return bool(result)
+
     def broadcast(self, data):
         """
             broadcast msg to all clients
         """
-        for client in self.clients:
-            client.send(data.encode('utf-8'))
+        [client.send(msgpack.dups(data)) for client in self.clients]
 
     def add_client(self):
         """
