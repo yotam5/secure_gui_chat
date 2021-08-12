@@ -56,6 +56,8 @@ class Server(object):
             load the keys of the server or create them
             if it doesnt exist
         """
+        # NOTE: checking using the folder where the server/client
+        # is using self.directory
         if not os.path.exists('./private.pem') or \
                 not os.path.exists('./public.pem'):
             logging.debug("keys not found so will be created")
