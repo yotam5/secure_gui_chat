@@ -8,7 +8,7 @@ from sys import exit, getsizeof
 import zlib
 import queue
 import re
-
+from time import sleep
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey.RSA import importKey
@@ -75,7 +75,7 @@ class Server(object):
         self.load_keys()
         self.init_connection()
         self.init_serving()
-        self.close()
+        #self.close()
 
     def init_connection(self):
         """
@@ -95,6 +95,7 @@ class Server(object):
         """
         self.serve = threading.Thread(target=self.add_client)
         self.exit = False
+        self.serve.daemon = True
         self.serve.start()
         self.serve.join()  # NOTE: doesnt exit need to do something bou`t this
 
@@ -174,6 +175,8 @@ class Server(object):
         # stage 3: challange response for login
         function_dict = {'funcname': 'func name'}
         # can alll with dict['key'](param)
+        client_name: str = ""
+        
         while serve_client:
             client_data = client.recv(4096)
             if client_data in ['', b'']:  # client disconnected
@@ -208,7 +211,8 @@ class Server(object):
                     result = self.database_manager.is_online(data['user_id'])
                     result = AESCipher.encrypt_data_to_bytes(result, secret)
                     client.send(result)
-
+        if client_name:
+            self.database_manager.logout(client_name)
         logging.debug(f"client disconnected")
 
         exit(0)  # terminate thread
@@ -275,6 +279,8 @@ class Server(object):
             client_thread = threading.Thread(
                 target=self.client_handle, args=[client])
             client_thread.start()
+        logging.debug("add_client is exiting")
+        exit(0)
 
     def get_device_internal_ip(self):
         """
@@ -286,8 +292,8 @@ class Server(object):
     def receive_sigint(self, sig_num, frame):
         logging.debug("received sigint now closing server and socket")
         self.close_server()
+        self.exit = True
         exit(0)
-
 
 if __name__ == '__main__':
     logging.debug("starting server:")

@@ -15,6 +15,9 @@ from client import Client
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
+    """
+        Client gui
+    """
     def __init__(self):
         super().__init__()
         self.setupUi(self)
@@ -27,10 +30,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             partial(self.login_signup_to_server, self.sign_up_btn,
                     partial(self.switch_to_page_2)))
 
-        # my data NOTE: to do login click
+        self.comboBox.view().pressed.connect(
+            self.comboBoxEvent)
+
+        # my data NOTE: to do login click?
         self.client_inner = Client()
         self.show()
         self.connected_to_server = False
+
+    def comboBoxEvent(self, index):
+        """
+            handle the combobox events when clicked to select a user
+        """
+        pass
 
     def user_search_key_event(self):
         """
