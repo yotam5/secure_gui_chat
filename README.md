@@ -8,6 +8,7 @@ In the project i used rsa, diffie hellman, aes and hashing to simulate a secure 
 
 ![login screen](login_screen_example.png?raw=true "login screen")
 ![chat screen](chat_screen_example.png?raw=true "chat screen")
+![chat example](chat_example.png?raw=true "chat example")
 ## Usage
 
 ```bash

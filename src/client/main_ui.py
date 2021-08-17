@@ -209,8 +209,8 @@ class Ui_MainWindow(object):
     def resizeEvent(self, e):
         self.model.layoutChanged.emit()
 
-    def message_to(self):
-        self.model.add_message(bubble.USER_ME, "works")
+    def message_to(self, text: str):
+        self.model.add_message(bubble.USER_ME, text)
 
-    def message_from(self):
-        self.model.add_message(bubble.USER_THEM, "works")
+    def message_from(self, text: str):
+        self.model.add_message(bubble.USER_THEM, text)

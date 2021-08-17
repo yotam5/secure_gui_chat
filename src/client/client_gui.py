@@ -42,8 +42,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
             handle the combobox events when clicked to select a user
         """
+        self.message_to("the msg ui works")
+        self.message_from("i know but you need to add chat groups")
+        self.message_to("wait what")
         pass
-
+    
+    
     def user_search_key_event(self):
         """
             handle enter key event to search a user
