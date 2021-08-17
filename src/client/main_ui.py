@@ -18,57 +18,63 @@ import pictures
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
-            MainWindow.setObjectName(u"MainWindow")
+            MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 706)
         MainWindow.setMinimumSize(QSize(10, 10))
         MainWindow.setMaximumSize(QSize(1280, 720))
         self.centralwidget = QWidget(MainWindow)
-        self.centralwidget.setObjectName(u"centralwidget")
+        self.centralwidget.setObjectName("centralwidget")
         self.centralwidget.setMinimumSize(QSize(10, 10))
         self.centralwidget.setMaximumSize(QSize(1280, 720))
         self.centralwidget.setAutoFillBackground(False)
         self.stackedWidget = QStackedWidget(self.centralwidget)
-        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.stackedWidget.setObjectName("stackedWidget")
         self.stackedWidget.setGeometry(QRect(0, 0, 1280, 731))
         self.stackedWidget.setMinimumSize(QSize(10, 10))
         self.stackedWidget.setMaximumSize(QSize(8000, 8000))
         self.page_1 = QWidget()
-        self.page_1.setObjectName(u"page_1")
+        self.page_1.setObjectName("page_1")
         self.page_1.setMinimumSize(QSize(1280, 720))
         self.page_1.setMaximumSize(QSize(1280, 720))
         self.label = QLabel(self.page_1)
-        self.label.setObjectName(u"label")
+        self.label.setObjectName("label")
         self.label.setGeometry(QRect(0, -1, 1280, 711))
         self.label.setMinimumSize(QSize(10, 10))
         self.label.setMaximumSize(QSize(8000, 8000))
-        self.label.setPixmap(QPixmap(u":/newPrefix/static/login_picture.jpg"))
+        self.label.setPixmap(QPixmap(":/newPrefix/static/login_picture.jpg"))
         self.label.setScaledContents(True)
         self.username_field = QLineEdit(self.page_1)
-        self.username_field.setObjectName(u"username_field")
+        self.username_field.setObjectName("username_field")
         self.username_field.setGeometry(QRect(210, 440, 351, 51))
-        self.username_field.setStyleSheet(u" border: 2px solid white;\n"
-                                          " border-radius: 10px;")
+        self.username_field.setStyleSheet(
+            " border: 2px solid white;\n" " border-radius: 10px;"
+        )
         self.password_field = QLineEdit(self.page_1)
-        self.password_field.setObjectName(u"password_field")
+        self.password_field.setObjectName("password_field")
         self.password_field.setGeometry(QRect(690, 440, 351, 51))
-        self.password_field.setStyleSheet(u" border: 2px solid white;\n"
-                                          " border-radius: 10px;")
+        self.password_field.setStyleSheet(
+            " border: 2px solid white;\n" " border-radius: 10px;"
+        )
         self.login_btn = QPushButton(self.page_1)
-        self.login_btn.setObjectName(u"login_btn")
+        self.login_btn.setObjectName("login_btn")
         self.login_btn.setGeometry(QRect(370, 560, 191, 61))
-        self.login_btn.setStyleSheet(u" border: 2px solid white;\n"
-                                     "color: rgb(138, 226, 52);\n"
-                                     "background-color: rgb(255, 255, 255,12);\n"
-                                     " border-radius: 10px;")
+        self.login_btn.setStyleSheet(
+            " border: 2px solid white;\n"
+            "color: rgb(138, 226, 52);\n"
+            "background-color: rgb(255, 255, 255,12);\n"
+            " border-radius: 10px;"
+        )
         self.login_btn.setAutoDefault(False)
         self.sign_up_btn = QPushButton(self.page_1)
-        self.sign_up_btn.setObjectName(u"sign_up_btn")
+        self.sign_up_btn.setObjectName("sign_up_btn")
         self.sign_up_btn.setGeometry(QRect(680, 560, 191, 61))
-        self.sign_up_btn.setStyleSheet(u" border: 2px solid white;\n"
-                                       "color: rgb(138, 226, 52);\n"
-                                       "background-color: rgb(255, 255, 255,12);\n"
-                                       "\n"
-                                       " border-radius: 10px;")
+        self.sign_up_btn.setStyleSheet(
+            " border: 2px solid white;\n"
+            "color: rgb(138, 226, 52);\n"
+            "background-color: rgb(255, 255, 255,12);\n"
+            "\n"
+            " border-radius: 10px;"
+        )
         self.stackedWidget.addWidget(self.page_1)
         self.label.raise_()
         self.sign_up_btn.raise_()
@@ -76,53 +82,62 @@ class Ui_MainWindow(object):
         self.username_field.raise_()
         self.login_btn.raise_()
         self.page_2 = QWidget()
-        self.page_2.setObjectName(u"page_2")
+        self.page_2.setObjectName("page_2")
         self.label_2 = QLabel(self.page_2)
-        self.label_2.setObjectName(u"label_2")
+        self.label_2.setObjectName("label_2")
         self.label_2.setEnabled(True)
         self.label_2.setGeometry(QRect(0, -10, 1280, 720))
         self.label_2.setMinimumSize(QSize(1280, 720))
         self.label_2.setMaximumSize(QSize(1280, 720))
-        self.label_2.setStyleSheet(u"")
-        self.label_2.setPixmap(
-            QPixmap(u":/newPrefix/static/msg_background.jpg"))
+        self.label_2.setStyleSheet("")
+        self.label_2.setPixmap(QPixmap(":/newPrefix/static/msg_background.jpg"))
         self.label_2.setScaledContents(True)
         self.label_2.setTextInteractionFlags(Qt.NoTextInteraction)
         self.chat = QTextEdit(self.page_2)
-        self.chat.setObjectName(u"chat")
+        self.chat.setObjectName("chat")
         self.chat.setGeometry(QRect(480, 20, 771, 581))
         self.chat.setMinimumSize(QSize(10, 10))
-        self.chat.setStyleSheet(u"border: 3px light green; \n"
-                                "                  background-color: rgba(0, 255, 255, 90);\n"
-                                "border-radius: 10px;")
+        self.chat.setStyleSheet(
+            "border: 3px light green; \n"
+            "                  background-color: rgba(0, 255, 255, 90);\n"
+            "border-radius: 10px;"
+        )
         self.chat.setReadOnly(True)
         self.text_to_send = QTextEdit(self.page_2)
-        self.text_to_send.setObjectName(u"text_to_send")
+        self.text_to_send.setObjectName("text_to_send")
         self.text_to_send.setGeometry(QRect(480, 620, 591, 61))
         self.text_to_send.setMinimumSize(QSize(10, 10))
-        self.text_to_send.setStyleSheet(u"border: 3px light green; \n"
-                                        "                  background-color: rgba(0, 255, 255, 90);\n"
-                                        "border-radius: 10px;")
+        self.text_to_send.setStyleSheet(
+            "border: 3px light green; \n"
+            "                  background-color: rgba(0, 255, 255, 90);\n"
+            "border-radius: 10px;"
+        )
         self.send_btn = QPushButton(self.page_2)
-        self.send_btn.setObjectName(u"send_btn")
+        self.send_btn.setObjectName("send_btn")
         self.send_btn.setGeometry(QRect(1080, 620, 171, 61))
-        self.send_btn.setStyleSheet(u" border: 2px solid white;\n"
-                                    "color: rgb(7,11,55);\n"
-                                    " border-radius: 10px;")
+        self.send_btn.setStyleSheet(
+            " border: 2px solid white;\n"
+            "color: rgb(7,11,55);\n"
+            " border-radius: 10px;"
+        )
         self.lineEdit = QLineEdit(self.page_2)
-        self.lineEdit.setObjectName(u"lineEdit")
+        self.lineEdit.setObjectName("lineEdit")
         self.lineEdit.setGeometry(QRect(130, 140, 241, 51))
-        self.lineEdit.setStyleSheet(u"border: 3px light green; \n"
-                                    "                  background-color: rgba(0, 255, 255, 90);\n"
-                                    "border-radius: 10px;")
+        self.lineEdit.setStyleSheet(
+            "border: 3px light green; \n"
+            "                  background-color: rgba(0, 255, 255, 90);\n"
+            "border-radius: 10px;"
+        )
         self.comboBox = QComboBox(self.page_2)
         self.comboBox.addItem("")
-        self.comboBox.setObjectName(u"comboBox")
+        self.comboBox.setObjectName("comboBox")
         self.comboBox.setGeometry(QRect(130, 30, 251, 51))
-        self.comboBox.setStyleSheet(u"border: 3px light green; \n"
-                                    "color: rgb(85, 87, 83);\n"
-                                    "                  background-color: rgba(0, 255, 255, 90);\n"
-                                    "border-radius: 10px;")
+        self.comboBox.setStyleSheet(
+            "border: 3px light green; \n"
+            "color: rgb(85, 87, 83);\n"
+            "                  background-color: rgba(0, 255, 255, 90);\n"
+            "border-radius: 10px;"
+        )
         self.stackedWidget.addWidget(self.page_2)
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -131,37 +146,54 @@ class Ui_MainWindow(object):
         self.login_btn.setDefault(False)
 
         QMetaObject.connectSlotsByName(MainWindow)
+
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate(
-            "MainWindow", u"MainWindow", None))
+        MainWindow.setWindowTitle(
+            QCoreApplication.translate("MainWindow", "MainWindow", None)
+        )
         self.label.setText("")
         self.username_field.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", u"enter username:", None))
+            QCoreApplication.translate("MainWindow", "enter username:", None)
+        )
         self.password_field.setEchoMode(QLineEdit.Password)
         self.password_field.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", u"enter password:", None))
-        self.login_btn.setText(QCoreApplication.translate(
-            "MainWindow", u"Login", None))
-        self.sign_up_btn.setText(QCoreApplication.translate(
-            "MainWindow", u"Sign Up", None))
+            QCoreApplication.translate("MainWindow", "enter password:", None)
+        )
+        self.login_btn.setText(QCoreApplication.translate("MainWindow", "Login", None))
+        self.sign_up_btn.setText(
+            QCoreApplication.translate("MainWindow", "Sign Up", None)
+        )
         self.label_2.setText("")
-        self.chat.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                                     "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-                                                     "p, li { white-space: pre-wrap; }\n"
-                                                     "</style></head><body style=\" font-family:'Apercu Mono'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-                                                     "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
-        self.text_to_send.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-                                                             "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-                                                             "p, li { white-space: pre-wrap; }\n"
-                                                             "</style></head><body style=\" font-family:'Apercu Mono'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-                                                             "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
-        self.send_btn.setText(QCoreApplication.translate(
-            "MainWindow", u"Send", None))
+        self.chat.setHtml(
+            QCoreApplication.translate(
+                "MainWindow",
+                '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
+                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
+                "p, li { white-space: pre-wrap; }\n"
+                "</style></head><body style=\" font-family:'Apercu Mono'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
+                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
+                None,
+            )
+        )
+        self.text_to_send.setHtml(
+            QCoreApplication.translate(
+                "MainWindow",
+                '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
+                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
+                "p, li { white-space: pre-wrap; }\n"
+                "</style></head><body style=\" font-family:'Apercu Mono'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
+                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
+                None,
+            )
+        )
+        self.send_btn.setText(QCoreApplication.translate("MainWindow", "Send", None))
         self.lineEdit.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", u"search user:", None))
-        self.comboBox.setItemText(0, QCoreApplication.translate(
-            "MainWindow", u"select chat:", None))
+            QCoreApplication.translate("MainWindow", "search user:", None)
+        )
+        self.comboBox.setItemText(
+            0, QCoreApplication.translate("MainWindow", "select chat:", None)
+        )
 
     # retranslateUi
