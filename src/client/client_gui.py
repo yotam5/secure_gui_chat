@@ -29,23 +29,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sign_up_btn.clicked.connect(
             partial(self.login_signup_to_server, self.sign_up_btn,
                     partial(self.switch_to_page_2)))
-
+        # self.send_btn
         self.comboBox.view().pressed.connect(
             self.comboBoxEvent)
 
-        # my data NOTE: to do login click?
         self.client_inner = Client()
         self.show()
         self.connected_to_server = False
+        self.talkingto: str = ""
 
     def comboBoxEvent(self, index):
         """
             handle the combobox events when clicked to select a user
         """
-        self.message_to("the msg ui works")
-        self.message_from("i know but you need to add chat groups")
-        self.message_to("wait what")
-        pass
+        selected = self.comboBox.currentText()
+        unvalid = [self.comboBox.placeholderText(), self.client_inner.get_username()]
+        if selected not in unvalid:
+            self.talkingto = selected
     
     
     def user_search_key_event(self):

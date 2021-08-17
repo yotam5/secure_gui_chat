@@ -185,7 +185,7 @@ class Server(object):
                 client_data = AESCipher.decrypt_data_from_bytes(
                     client_data, secret)
                 logging.debug("handling data result")
-
+                logging.debug(f"go from client {client_data}")
                 data_dict_keys = client_data.keys()
                 client_action = client_data['Action']
                 if client_action in ['LOGIN', 'SIGN_UP']:
@@ -204,6 +204,8 @@ class Server(object):
                             user_id, user_password)
                         logging.debug(f"the login result is {login_result}")
                         client.send(msgpack.dumps(login_result))
+                        if login_result:
+                            pass # NOTE: add to dict {id, socket}   
                 if client_action == 'SEARCH':
                     data = client_data['Data']
                     logging.debug(

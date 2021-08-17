@@ -120,7 +120,7 @@ class Client(object):
 
         logging.debug("end diffie hellman")
         server_data = msgpack.loads(self.decrypyor.decrypt(server_data))
-        print(server_data)
+        logging.debug(server_data)
         serverPubKey = server_data['PubKey']
         serverPubKey = int(zlib.decompress(serverPubKey).decode('utf-8'))
         secret = privateKey.gen_shared_key(serverPubKey)
@@ -151,6 +151,15 @@ class Client(object):
         self.client_socket.send(data)
         answer: bool = self.client_socket.recv(4096)
         return msgpack.loads(answer)
+
+    def send(self, text: str, username: str):
+        #encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
+        data = {'Action': 'PASS_TO', 'Data': {
+            'user_id': username, 'text': text
+        }}
+        data = AESCipher.encrypt_data_to_bytes(data,self.__aes256key)
+        self.client_socket.send(data)
+
 
     def recv(self):
         response = self.client_socket.recv(4096)
@@ -192,3 +201,4 @@ if __name__ == '__main__':
     a.secure_connection()
     a.login("123")
     print(a.is_online('yoram'))
+    a.send("hello","jeff")
