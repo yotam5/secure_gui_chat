@@ -41,7 +41,7 @@ class Server(object):
 
     def __init__(self):
         self.localhost, self.port = network_configuration_loader()
-        self.clients = []
+        self.clients = {}
         self.publicKey = None
         self.privateKey = None
         self.directory = os.path.dirname(os.path.realpath(__file__))
@@ -75,7 +75,7 @@ class Server(object):
         self.load_keys()
         self.init_connection()
         self.init_serving()
-        #self.close()
+        # self.close()
 
     def init_connection(self):
         """
@@ -176,7 +176,7 @@ class Server(object):
         function_dict = {'funcname': 'func name'}
         # can alll with dict['key'](param)
         client_name: str = ""
-        
+
         while serve_client:
             client_data = client.recv(4096)
             if client_data in ['', b'']:  # client disconnected
@@ -188,6 +188,7 @@ class Server(object):
                 logging.debug(f"go from client {client_data}")
                 data_dict_keys = client_data.keys()
                 client_action = client_data['Action']
+
                 if client_action in ['LOGIN', 'SIGN_UP']:
                     login_info = client_data['Data']
                     user_id = login_info['user_id']
@@ -205,14 +206,21 @@ class Server(object):
                         logging.debug(f"the login result is {login_result}")
                         client.send(msgpack.dumps(login_result))
                         if login_result:
-                            pass # NOTE: add to dict {id, socket}   
-                if client_action == 'SEARCH':
+                            self.clients[user_id] = (client, threading.Lock())
+
+                elif client_action == 'SEARCH':
                     data = client_data['Data']
                     logging.debug(
                         f"client trying to search user {data['user_id']}")
                     result = self.database_manager.is_online(data['user_id'])
                     result = AESCipher.encrypt_data_to_bytes(result, secret)
                     client.send(result)
+                elif client_action == 'PASS_TO':
+                    data = client_data['Data']
+                    user_id = data['user_id']
+                    text = data['text']
+                    logging.debug(f"{user_id}-{text}")
+
         if client_name:
             self.database_manager.logout(client_name)
         logging.debug(f"client disconnected")
@@ -231,14 +239,17 @@ class Server(object):
         if not self.database_manager.is_exist(user_id):
             logging.debug(f"the user {user_id} can be created")
             if Server.strong_password(password):
+                logging.debug("the password is stronk")
                 hashed, salt = hash_utility.generate_hash(password)
                 self.database_manager.add_user(user_id, hashed, salt, status=1)
                 signup_result = True
+            else:
+                logging.debug("the password is weak")
         else:
             logging.debug(f"the user {user_id} already exists")
         return signup_result
 
-    def handle_login(self, user_id: str, password: str):
+    def handle_login(self, user_id: str, password: str) -> bool:
         """
             handle login into the server, correct user_id and password
         """
@@ -263,7 +274,7 @@ class Server(object):
             password)
         return bool(result)
 
-    def broadcast(self, data):
+    def broadcast(self, data):  # NOTE: FIX
         """
             broadcast msg to all clients
         """
@@ -277,7 +288,6 @@ class Server(object):
             # NOTE: need to think about how the server will close itself
             client, addr = self.server_socket.accept()
             logging.debug("new connection have been established")
-            self.clients.append(client)
             client_thread = threading.Thread(
                 target=self.client_handle, args=[client])
             client_thread.start()
@@ -296,6 +306,7 @@ class Server(object):
         self.close_server()
         self.exit = True
         exit(0)
+
 
 if __name__ == '__main__':
     logging.debug("starting server:")

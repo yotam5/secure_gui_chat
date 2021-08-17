@@ -10,7 +10,8 @@ from client import Client
 
 """
     TODO:
-        handle the chat and send according to the combobox selction
+        -need to add receving thread to client maybe use queue?
+        -need when client receive add send_from in gui
 """
 
 
@@ -18,10 +19,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     """
         Client gui
     """
+
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.lineEdit.returnPressed.connect(self.user_search_key_event)
+
         self.login_btn.clicked.connect(
             partial(self.login_signup_to_server, self.login_btn,
                     partial(self.switch_to_page_2)))
@@ -29,7 +32,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.sign_up_btn.clicked.connect(
             partial(self.login_signup_to_server, self.sign_up_btn,
                     partial(self.switch_to_page_2)))
-        # self.send_btn
+
+        self.send_btn.clicked.connect(self.send_button)
+
         self.comboBox.view().pressed.connect(
             self.comboBoxEvent)
 
@@ -43,11 +48,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             handle the combobox events when clicked to select a user
         """
         selected = self.comboBox.currentText()
-        unvalid = [self.comboBox.placeholderText(), self.client_inner.get_username()]
-        if selected not in unvalid:
+        if self.valid_reveiver(selected):
             self.talkingto = selected
-    
-    
+        else:
+            print("unvalid")
+
+    def valid_reveiver(self, user_id: str) -> bool:
+        unvalid = [self.comboBox.placeholderText(
+        ), self.client_inner.get_username()]
+        return user_id not in unvalid
+
     def user_search_key_event(self):
         """
             handle enter key event to search a user
@@ -97,14 +107,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 function()
         btn.setStyleSheet(original_style)  # if the login, recolor logbtn
 
+    def send_button(self):
+        text = self.text_to_send.toPlainText()
+        user_id_receiver = self.comboBox.currentText()
+        if self.valid_reveiver(user_id_receiver):
+            self.client_inner.send(text, user_id_receiver)
+
     def switch_to_page_2(self, function=False):
         # if function and function():
         self.stackedWidget.setCurrentWidget(self.page_2)
-        print("switch 2")
 
     def switch_to_page_1(self):
         self.stackedWidget.setCurrentWidget(self.page_1)
-        print("switch 1")
 
 
 app = QApplication(sys.argv)
