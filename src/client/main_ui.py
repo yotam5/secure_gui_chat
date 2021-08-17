@@ -11,7 +11,7 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-
+import bubble
 import pictures
 
 
@@ -90,10 +90,11 @@ class Ui_MainWindow(object):
         self.label_2.setMinimumSize(QSize(1280, 720))
         self.label_2.setMaximumSize(QSize(1280, 720))
         self.label_2.setStyleSheet("")
-        self.label_2.setPixmap(QPixmap(":/newPrefix/static/msg_background.jpg"))
+        self.label_2.setPixmap(
+            QPixmap(":/newPrefix/static/msg_background.jpg"))
         self.label_2.setScaledContents(True)
         self.label_2.setTextInteractionFlags(Qt.NoTextInteraction)
-        self.chat = QTextEdit(self.page_2)
+        self.chat = QListView(self.page_2)
         self.chat.setObjectName("chat")
         self.chat.setGeometry(QRect(480, 20, 771, 581))
         self.chat.setMinimumSize(QSize(10, 10))
@@ -102,7 +103,12 @@ class Ui_MainWindow(object):
             "                  background-color: rgba(0, 255, 255, 90);\n"
             "border-radius: 10px;"
         )
-        self.chat.setReadOnly(True)
+        self.chat.setResizeMode(QListView.Adjust)
+        self.chat.setItemDelegate(bubble.MessageDelegate())
+        self.model = bubble.MessageModel()
+        self.chat.setModel(self.model)
+
+        # self.chat.setReadOnly(True)
         self.text_to_send = QTextEdit(self.page_2)
         self.text_to_send.setObjectName("text_to_send")
         self.text_to_send.setGeometry(QRect(480, 620, 591, 61))
@@ -161,12 +167,13 @@ class Ui_MainWindow(object):
         self.password_field.setPlaceholderText(
             QCoreApplication.translate("MainWindow", "enter password:", None)
         )
-        self.login_btn.setText(QCoreApplication.translate("MainWindow", "Login", None))
+        self.login_btn.setText(
+            QCoreApplication.translate("MainWindow", "Login", None))
         self.sign_up_btn.setText(
             QCoreApplication.translate("MainWindow", "Sign Up", None)
         )
         self.label_2.setText("")
-        self.chat.setHtml(
+        """self.chat.setHtml(
             QCoreApplication.translate(
                 "MainWindow",
                 '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
@@ -176,7 +183,7 @@ class Ui_MainWindow(object):
                 '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
                 None,
             )
-        )
+        )"""
         self.text_to_send.setHtml(
             QCoreApplication.translate(
                 "MainWindow",
@@ -188,7 +195,8 @@ class Ui_MainWindow(object):
                 None,
             )
         )
-        self.send_btn.setText(QCoreApplication.translate("MainWindow", "Send", None))
+        self.send_btn.setText(
+            QCoreApplication.translate("MainWindow", "Send", None))
         self.lineEdit.setPlaceholderText(
             QCoreApplication.translate("MainWindow", "search user:", None)
         )
@@ -197,3 +205,12 @@ class Ui_MainWindow(object):
         )
 
     # retranslateUi
+
+    def resizeEvent(self, e):
+        self.model.layoutChanged.emit()
+
+    def message_to(self):
+        self.model.add_message(bubble.USER_ME, "works")
+
+    def message_from(self):
+        self.model.add_message(bubble.USER_THEM, "works")
