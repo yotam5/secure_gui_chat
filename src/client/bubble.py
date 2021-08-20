@@ -142,7 +142,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         # Layout the UI
-        l = QVBoxLayout()
+        layout = QVBoxLayout()
 
         self.message_input = QLineEdit("Enter message here")
 
@@ -161,10 +161,10 @@ class MainWindow(QMainWindow):
         self.btn1.pressed.connect(self.message_to)
         self.btn2.pressed.connect(self.message_from)
 
-        l.addWidget(self.messages)
-        l.addWidget(self.message_input)
-        l.addWidget(self.btn1)
-        l.addWidget(self.btn2)
+        layout.addWidget(self.messages)
+        layout.addWidget(self.message_input)
+        layout.addWidget(self.btn1)
+        layout.addWidget(self.btn2)
 
         self.w = QWidget()
         self.w.setLayout(l)

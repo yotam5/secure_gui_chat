@@ -22,6 +22,17 @@ logging.basicConfig(level=logging.DEBUG)
 # NOTE: to add 2 FA with email or etc
 # NOTE: to check auth using server perment pem?
 
+""" 
+    FIXME: 
+        to add a receving thread that will receive all server
+        packets and handles them, like is_online, INCOMING and
+        all the others, istead of using receive in function cuz its
+        just stupid, maybe us a queue or something in a thread
+        to prevent starvation of data,
+        
+        FIXME: one thread recevies to a queue and other handle the data?
+        FIXME: ALSO, SEND THE DATA SIZE!!!!!!!!!!!!!!
+"""
 
 class Client(object):
     def __init__(self, user_id: str = "DUMMY"):
@@ -153,13 +164,12 @@ class Client(object):
         return msgpack.loads(answer)
 
     def send(self, text: str, username: str):
-        #encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
+        # encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
         data = {'Action': 'PASS_TO', 'Data': {
             'user_id': username, 'text': text
         }}
-        data = AESCipher.encrypt_data_to_bytes(data,self.__aes256key)
+        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         self.client_socket.send(data)
-
 
     def recv(self):
         response = self.client_socket.recv(4096)
@@ -201,4 +211,4 @@ if __name__ == '__main__':
     a.secure_connection()
     a.login("123")
     print(a.is_online('yoram'))
-    a.send("hello","jeff")
+    a.send("hello", "jeff")

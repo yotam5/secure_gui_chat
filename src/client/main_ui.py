@@ -201,7 +201,6 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "search user:", None)
         )
 
-
         self.comboBox.setPlaceholderText("select chat: ")
         deafult_combo = self.comboBox.placeholderText()
         self.comboBox.setItemText(

@@ -1,6 +1,7 @@
 # built in
 import socket
 import threading
+import _thread
 import logging
 import os.path
 import signal
@@ -9,6 +10,8 @@ import zlib
 import queue
 import re
 from time import sleep
+from typing import Tuple, Dict
+
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey.RSA import importKey
@@ -41,7 +44,7 @@ class Server(object):
 
     def __init__(self):
         self.localhost, self.port = network_configuration_loader()
-        self.clients = {}
+        self.clients: Dict[str, Tuple[socket.socket, _thread.LockType]] = {}
         self.publicKey = None
         self.privateKey = None
         self.directory = os.path.dirname(os.path.realpath(__file__))
@@ -215,11 +218,35 @@ class Server(object):
                     result = self.database_manager.is_online(data['user_id'])
                     result = AESCipher.encrypt_data_to_bytes(result, secret)
                     client.send(result)
+
+                    # FIXME: move onto different thread for sending?
+                    """ FIXME: SEND MSG SIZE, and also use list if the
+                        socket is used to send later, maybe use thread also 
+                        or queue and server thread will handle this later?
+                    """
+
                 elif client_action == 'PASS_TO':
                     data = client_data['Data']
                     user_id = data['user_id']
                     text = data['text']
                     logging.debug(f"{user_id}-{text}")
+                    # NOTE: must be in dict
+
+                    if user_id in self.clients:
+                        receiver_socket, lock = self.clients['user_id']
+                        logging.debug(f"using {user_id} is a valid key")
+                        busy = lock.acquire()
+                        if not busy:
+                            sender_data = {'Action': 'INCOMING', 'Data': {
+                                'user_id': client_name, 'text': text
+                            }}
+                            sender_data = \
+                                AESCipher.encrypt_data_to_bytes(
+                                    sender_data, secret)
+                            receiver_socket.send(sender_data)
+                        # NOTE: ELSE? PUSH TO QUEUE??! server will handle, or idk?
+                    else:
+                        logging.debug(f"username {user_id} isnt a valid key")
 
         if client_name:
             self.database_manager.logout(client_name)
