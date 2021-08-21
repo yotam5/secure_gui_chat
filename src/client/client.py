@@ -22,17 +22,18 @@ logging.basicConfig(level=logging.DEBUG)
 # NOTE: to add 2 FA with email or etc
 # NOTE: to check auth using server perment pem?
 
-""" 
+"""
     FIXME: 
         to add a receving thread that will receive all server
         packets and handles them, like is_online, INCOMING and
         all the others, istead of using receive in function cuz its
         just stupid, maybe us a queue or something in a thread
         to prevent starvation of data,
-        
+
         FIXME: one thread recevies to a queue and other handle the data?
         FIXME: ALSO, SEND THE DATA SIZE!!!!!!!!!!!!!!
 """
+
 
 class Client(object):
     def __init__(self, user_id: str = "DUMMY"):

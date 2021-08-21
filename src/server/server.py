@@ -11,6 +11,7 @@ import queue
 import re
 from time import sleep
 from typing import Tuple, Dict
+from queue import deque
 
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
@@ -179,6 +180,7 @@ class Server(object):
         function_dict = {'funcname': 'func name'}
         # can alll with dict['key'](param)
         client_name: str = ""
+        my_deque = deque()
 
         while serve_client:
             client_data = client.recv(4096)
@@ -211,6 +213,9 @@ class Server(object):
                         if login_result:
                             self.clients[user_id] = (client, threading.Lock())
 
+                elif client_action == 'PASS_TO':
+                    my_deque.append(client_data)
+
                 elif client_action == 'SEARCH':
                     data = client_data['Data']
                     logging.debug(
@@ -225,17 +230,24 @@ class Server(object):
                         or queue and server thread will handle this later?
                     """
 
-                elif client_action == 'PASS_TO':
-                    data = client_data['Data']
+                my_deque.append("stop")
+
+                # FIXME: make this a thread?
+                dequed_value = my_deque.popleft()
+                while dequed_value != "stop":
+                    logging.debug(f"dequed data is {dequed_value}")
+                    data = dequed_value['Data']
                     user_id = data['user_id']
                     text = data['text']
                     logging.debug(f"{user_id}-{text}")
                     # NOTE: must be in dict
 
                     if user_id in self.clients:
-                        receiver_socket, lock = self.clients['user_id']
+
                         logging.debug(f"using {user_id} is a valid key")
-                        busy = lock.acquire()
+                        receiver_socket, lock = self.clients[user_id]
+                        busy = lock.acquire()  # aquire socket for sending
+
                         if not busy:
                             sender_data = {'Action': 'INCOMING', 'Data': {
                                 'user_id': client_name, 'text': text
@@ -244,9 +256,12 @@ class Server(object):
                                 AESCipher.encrypt_data_to_bytes(
                                     sender_data, secret)
                             receiver_socket.send(sender_data)
-                        # NOTE: ELSE? PUSH TO QUEUE??! server will handle, or idk?
+                            lock.release()  # release
+                        else:
+                            my_deque.append(dequed_value)
                     else:
                         logging.debug(f"username {user_id} isnt a valid key")
+                    dequed_value = my_deque.popleft()
 
         if client_name:
             self.database_manager.logout(client_name)

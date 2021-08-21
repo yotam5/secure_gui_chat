@@ -111,6 +111,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         text = self.text_to_send.toPlainText()
         user_id_receiver = self.comboBox.currentText()
         if self.valid_reveiver(user_id_receiver):
+            self.message_to(text)
             self.client_inner.send(text, user_id_receiver)
 
     def switch_to_page_2(self, function=False):
