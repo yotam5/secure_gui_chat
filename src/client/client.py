@@ -4,6 +4,7 @@ import sys
 import os.path
 import logging
 import zlib
+from queue import deque
 
 # my own
 from src.utilities import rsa_utility
@@ -23,15 +24,17 @@ logging.basicConfig(level=logging.DEBUG)
 # NOTE: to check auth using server perment pem?
 
 """
-    FIXME: 
-        to add a receving thread that will receive all server
-        packets and handles them, like is_online, INCOMING and
-        all the others, istead of using receive in function cuz its
-        just stupid, maybe us a queue or something in a thread
-        to prevent starvation of data,
-
-        FIXME: one thread recevies to a queue and other handle the data?
-        FIXME: ALSO, SEND THE DATA SIZE!!!!!!!!!!!!!!
+    FIXME:
+        i need to create one thread for receving and one for sending,
+        ill have queue for the receved and the data that needs to be sent
+        and also ill send the msg size before the message itself,
+        that will fix the problem of different sends and received at
+        the same time,
+        for example: is_online will send and the result
+                    will be received by the thread, then
+                    while iterating over the queue when data
+                    with action of "is_online" the is_online function
+                    will handle this
 """
 
 
@@ -52,6 +55,7 @@ class Client(object):
         self.decrypyor = PKCS1_OAEP.new(self.privateKey)
         self.encryptor = None
         self.__aes256key: bytes = ""
+        self.my_deque = deque()
 
     def load_keys(self):
         """
@@ -153,7 +157,7 @@ class Client(object):
         response = self.client_socket.recv(4096)
         return msgpack.loads(response)
 
-    def sign_up(self, password: str) -> bool:
+    def sign_up(self, password: str) -> bool:  # this not need thread
         """
             handle steps for account creation
         """
@@ -164,7 +168,7 @@ class Client(object):
         answer: bool = self.client_socket.recv(4096)
         return msgpack.loads(answer)
 
-    def send(self, text: str, username: str):
+    def send(self, text: str, username: str):  # need thread
         # encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
         data = {'Action': 'PASS_TO', 'Data': {
             'user_id': username, 'text': text

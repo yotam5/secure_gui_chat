@@ -53,6 +53,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             print("unvalid")
 
+    # NOTE: bruh why did i misstyped this
+
     def valid_reveiver(self, user_id: str) -> bool:
         unvalid = [self.comboBox.placeholderText(
         ), self.client_inner.get_username()]
