@@ -1,6 +1,5 @@
 # built in
 import socket
-import sys
 import os.path
 import logging
 import zlib
@@ -55,7 +54,7 @@ class Client(object):
         self.decrypyor = PKCS1_OAEP.new(self.privateKey)
         self.encryptor = None
         self.__aes256key: bytes = ""
-        self.my_deque = deque()
+        self.recevied_deque = deque()
 
     def load_keys(self):
         """
@@ -153,8 +152,9 @@ class Client(object):
         data = {'Action': 'LOGIN', 'Data': {
             "user_id": self.user_id, "password": password}}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        self.client_socket.send(data)
-        response = self.client_socket.recv(4096)
+        header = Client.send_header(data)
+        self.client_socket.send(header + data)
+        response = self.client_socket.recv(1024)
         return msgpack.loads(response)
 
     def sign_up(self, password: str) -> bool:  # this not need thread
@@ -164,17 +164,19 @@ class Client(object):
         data = {'Action': 'SIGN_UP', 'Data': {
             "user_id": self.user_id, "password": password}}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        self.client_socket.send(data)
-        answer: bool = self.client_socket.recv(4096)
+        header = Client.send_header(data)
+        self.client_socket.send(header + data)
+        answer = self.client_socket.recv(1024)
         return msgpack.loads(answer)
 
-    def send(self, text: str, username: str):  # need thread
+    def send(self, text: str, username: str):  # need thread ?
         # encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
         data = {'Action': 'PASS_TO', 'Data': {
             'user_id': username, 'text': text
         }}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        self.client_socket.send(data)
+        header = Client.send_header(data)
+        self.client_socket.send(header + data)
 
     def recv_thread(self):
         response = self.client_socket.recv(4096)
@@ -189,8 +191,10 @@ class Client(object):
         """
         data = {'Action': 'SEARCH', 'Data': {'user_id': user_id}}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        self.client_socket.send(data)
+        header = Client.send_header(data)
+        self.client_socket.send(header + data)
 
+        #NOTE: this will be handled in the thread cuz its blocking
         answer = self.client_socket.recv(4096)
         logging.debug(f"asked server if {user_id} is online: {answer}")
         answer = AESCipher.decrypt_data_from_bytes(answer, self.__aes256key)
@@ -210,6 +214,10 @@ class Client(object):
     def close(self):
         self.client_socket.close()
 
+    @staticmethod
+    def send_header(data: bytes) -> bytes:
+        header = str(len(data)).zfill(4)
+        return msgpack.dumps(header)
 
 if __name__ == '__main__':
     a = Client("yoram")

@@ -5,11 +5,9 @@ import _thread
 import logging
 import os.path
 import signal
-from sys import exit, getsizeof
+from sys import exit
 import zlib
-import queue
 import re
-from time import sleep
 from typing import Tuple, Dict
 from queue import deque
 
@@ -177,21 +175,24 @@ class Server(object):
         # stage 1: rsa key exchange
         # stage 2: dffie hellman algorithm for aes keys
         # stage 3: challange response for login
-        function_dict = {'funcname': 'func name'}
+        # function_dict = {'funcname': 'func name'}
         # can alll with dict['key'](param)
         client_name: str = ""
         my_deque = deque()
 
         while serve_client:
-            client_data = client.recv(4096)
-            if client_data in ['', b'']:  # client disconnected
+            client_msg_size = client.recv(5)
+            if client_msg_size in ['', b'']:  # client disconnected
                 serve_client = False
             else:
+                print(f"size of msg {client_msg_size}")
+                client_msg_size = int(msgpack.loads(client_msg_size))
+                client_data = client.recv(client_msg_size)
                 client_data = AESCipher.decrypt_data_from_bytes(
                     client_data, secret)
                 logging.debug("handling data result")
                 logging.debug(f"go from client {client_data}")
-                data_dict_keys = client_data.keys()
+                # data_dict_keys = client_data.keys()
                 client_action = client_data['Action']
 
                 if client_action in ['LOGIN', 'SIGN_UP']:
@@ -200,7 +201,7 @@ class Server(object):
                     user_password = login_info['password']
 
                     if client_action == 'SIGN_UP':
-                        signup_result: bool = self.handle_signup(
+                        signup_result = self.handle_signup(
                             user_id, user_password)
                         client.send(msgpack.dumps(signup_result))
 
@@ -249,13 +250,15 @@ class Server(object):
                         not_busy = lock.acquire()  # aquire socket for sending
 
                         if not_busy:
+                            logging.debug("client no busy, sending msg")
                             sender_data = {'Action': 'INCOMING', 'Data': {
                                 'user_id': client_name, 'text': text
                             }}
                             sender_data = \
                                 AESCipher.encrypt_data_to_bytes(
                                     sender_data, secret)
-                            receiver_socket.send(sender_data)
+                            header = Server.send_header(sender_data)
+                            receiver_socket.send(header + sender_data)
                             lock.release()  # release
                         else:
                             logging.debug("client busy, added to queue")
@@ -266,7 +269,7 @@ class Server(object):
 
         if client_name:
             self.database_manager.logout(client_name)
-        logging.debug(f"client disconnected")
+        logging.debug("client disconnected")
 
         exit(0)  # terminate thread
 
@@ -343,6 +346,11 @@ class Server(object):
         """
         host_name = socket.gethostname()
         return socket.gethostbyname(host_name + ".local")
+
+    @staticmethod
+    def send_header(data: bytes) -> bytes:
+        header = str(len(data)).zfill(4)
+        return msgpack.dumps(header)
 
     def receive_sigint(self, sig_num, frame):
         logging.debug("received sigint now closing server and socket")
