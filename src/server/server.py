@@ -246,9 +246,9 @@ class Server(object):
 
                         logging.debug(f"using {user_id} is a valid key")
                         receiver_socket, lock = self.clients[user_id]
-                        busy = lock.acquire()  # aquire socket for sending
+                        not_busy = lock.acquire()  # aquire socket for sending
 
-                        if not busy:
+                        if not_busy:
                             sender_data = {'Action': 'INCOMING', 'Data': {
                                 'user_id': client_name, 'text': text
                             }}
@@ -258,6 +258,7 @@ class Server(object):
                             receiver_socket.send(sender_data)
                             lock.release()  # release
                         else:
+                            logging.debug("client busy, added to queue")
                             my_deque.append(dequed_value)
                     else:
                         logging.debug(f"username {user_id} isnt a valid key")

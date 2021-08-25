@@ -176,9 +176,9 @@ class Client(object):
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         self.client_socket.send(data)
 
-    def recv(self):
+    def recv_thread(self):
         response = self.client_socket.recv(4096)
-
+    
     def run(self):  # NOTE: need to add thread for sending/reciving
         pass
 
