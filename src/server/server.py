@@ -181,10 +181,10 @@ class Server(object):
         my_deque = deque()
 
         while serve_client:
-            client_msg_size = client.recv(5)
-            if client_msg_size in ['', b'']:  # client disconnected
-                serve_client = False
-            else:
+            try:
+                client_msg_size = client.recv(5)
+                if len(client_msg_size) != 5:
+                    continue
                 print(f"size of msg {client_msg_size}")
                 client_msg_size = int(msgpack.loads(client_msg_size))
                 client_data = client.recv(client_msg_size)
@@ -266,6 +266,9 @@ class Server(object):
                     else:
                         logging.debug(f"username {user_id} isnt a valid key")
                     dequed_value = my_deque.popleft()
+
+            except ConnectionResetError as e:
+                serve_client = False
 
         if client_name:
             self.database_manager.logout(client_name)

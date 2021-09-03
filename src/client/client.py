@@ -180,7 +180,7 @@ class Client(object):
 
     def recv_thread(self):
         response = self.client_socket.recv(4096)
-    
+
     def run(self):  # NOTE: need to add thread for sending/reciving
         pass
 
@@ -194,7 +194,7 @@ class Client(object):
         header = Client.send_header(data)
         self.client_socket.send(header + data)
 
-        #NOTE: this will be handled in the thread cuz its blocking
+        # NOTE: this will be handled in the thread cuz its blocking
         answer = self.client_socket.recv(4096)
         logging.debug(f"asked server if {user_id} is online: {answer}")
         answer = AESCipher.decrypt_data_from_bytes(answer, self.__aes256key)
@@ -218,6 +218,7 @@ class Client(object):
     def send_header(data: bytes) -> bytes:
         header = str(len(data)).zfill(4)
         return msgpack.dumps(header)
+
 
 if __name__ == '__main__':
     a = Client("yoram")
