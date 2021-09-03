@@ -222,8 +222,11 @@ class Server(object):
                     logging.debug(
                         f"client trying to search user {data['user_id']}")
                     result = self.database_manager.is_online(data['user_id'])
-                    result = AESCipher.encrypt_data_to_bytes(result, secret)
-                    client.send(result)
+                    data = {"Action":"SEARCH", "Data":{"Result":result}}
+                    data = AESCipher.encrypt_data_to_bytes(data, secret)
+                    header = self.send_header(data)
+                    logging.debug("sending SEARCH result")
+                    client.send(header + data)
 
                     # FIXME: move onto different thread for sending?
                     """ FIXME: SEND MSG SIZE, and also use list if the

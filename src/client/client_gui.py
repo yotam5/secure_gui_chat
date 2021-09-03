@@ -7,7 +7,9 @@ import threading
 from functools import partial
 from time import sleep
 from client import Client
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
 """
     TODO:
         -need to add receving thread to client maybe use queue?
@@ -41,7 +43,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.client_inner = Client()
         self.show()
         self.connected_to_server = False
-        self.talkingto: str = ""
+        self.talkingto = ""
+        self.exit_safly = False
+        self.client_thread_stop = False
+        self.recv_queue_thread_obj = None
 
     def comboBoxEvent(self, index):
         """
@@ -66,12 +71,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         searched_usr_id = self.lineEdit.text()
         if searched_usr_id != self.client_inner.get_username():
-            online = self.client_inner.is_online(searched_usr_id)
-            if online:
-                AllItems = [self.comboBox.itemText(i) for i in
-                            range(self.comboBox.count())]
-                if searched_usr_id not in AllItems:
-                    self.comboBox.addItem(searched_usr_id)
+            self.client_inner.is_online(searched_usr_id)
+
+    def add_to_combo_box(self, item: str):
+        """
+            add item: str to the comboBox
+            selection options
+        """
+        if item != '':
+            AllItems = [self.comboBox.itemText(i) for i in
+                        range(self.comboBox.count())]
+            if item not in AllItems:
+                self.comboBox.addItem(item)
 
     def login_signup_to_server(self, btn, function):
         """
@@ -93,18 +104,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         username = self.username_field.text()
         if not self.connected_to_server:
             try:
+                logging.debug("creating connectin & thread")
                 self.client_inner.secure_connection()
                 self.connected_to_server = True
+                self.recv_queue_thread_obj = threading.Thread(
+                    target=self.handle_external_queue, args=[])
+                self.recv_queue_thread_obj.start()
             except Exception as e:
+                print(e)
                 print("error while connecting to server")
 
         # trying to auth with password
         if self.connected_to_server:
             self.client_inner.set_username(username)
             if btn.text() == 'Login':
-                result: bool = self.client_inner.login(password)
+                result = self.client_inner.login(password)
             elif btn.text() == 'Sign Up':
-                result: bool = self.client_inner.sign_up(password)
+                result = self.client_inner.sign_up(password)
             if result:  # if auth was affermtive
                 function()
         btn.setStyleSheet(original_style)  # if the login, recolor logbtn
@@ -123,7 +139,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def switch_to_page_1(self):
         self.stackedWidget.setCurrentWidget(self.page_1)
 
+    def handle_external_queue(self):
+        logging.debug("handle external queue")
+        while not self.client_thread_stop:
+            task = self.client_inner.get_external_queue_task()
+            if not task : continue
+            elif task["Action"] == "SEARCH":
+                logging.debug("added data to comboBox")
+                self.add_to_combo_box(task["Data"]["Result"])
+        logging.debug("exiting thread in client_gui")
+        self.exit_safly = True
+        exit(0)
 
-app = QApplication(sys.argv)
-w = MainWindow()
-app.exec_()
+    def closeEvent(self, event):
+        event.accept()
+        print("the ui is being closed")
+        self.client_thread_stop = True
+        print("ok")
+        self.client_inner.close()
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    w = MainWindow()
+    app.exec_()

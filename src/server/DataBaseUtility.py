@@ -87,11 +87,11 @@ class DataBaseManager(object):
                 return True
         return False
 
-    def is_online(self, user_id: str) -> bool:
+    def is_online(self, user_id: str) -> str:
         exist = self.is_exist(user_id, selection="online")
-        online = False
+        online = ''
         if exist and dict(exist)['online'] == 1:
-            online = True
+            online = user_id
         return online
 
     def close(self):

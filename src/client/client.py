@@ -4,6 +4,7 @@ import os.path
 import logging
 import zlib
 from queue import deque
+import threading
 
 # my own
 from src.utilities import rsa_utility
@@ -54,7 +55,11 @@ class Client(object):
         self.decrypyor = PKCS1_OAEP.new(self.privateKey)
         self.encryptor = None
         self.__aes256key: bytes = ""
-        self.recevied_deque = deque()
+        self.__internal_deque = deque()
+        self.__external_deque = deque()
+        self.my_supported_actions = []
+        self.run_recv_thread = False
+        self.recv_thread_obj = None
 
     def load_keys(self):
         """
@@ -155,7 +160,16 @@ class Client(object):
         header = Client.send_header(data)
         self.client_socket.send(header + data)
         response = self.client_socket.recv(1024)
-        return msgpack.loads(response)
+        response = msgpack.loads(response)
+
+        if response:
+            logging.debug("initiating recv thread in client inner")
+            self.run_recv_thread = True
+            self.recv_thread_obj = threading.Thread(
+                target=self.recv_thread, args=[])
+            self.recv_thread_obj.start()
+
+        return response
 
     def sign_up(self, password: str) -> bool:  # this not need thread
         """
@@ -179,7 +193,26 @@ class Client(object):
         self.client_socket.send(header + data)
 
     def recv_thread(self):
-        response = self.client_socket.recv(4096)
+        logging.debug("recv_thread called inner client")
+        while self.run_recv_thread:
+            try:
+                data_size = self.client_socket.recv(5)
+                if len(data_size) != 5:
+                    continue
+            except Exception as e:
+                continue
+            data_size = int(msgpack.loads(data_size))
+            data = self.client_socket.recv(data_size)
+            data = AESCipher.decrypt_data_from_bytes(data, self.__aes256key)
+            if data["Action"] not in self.my_supported_actions:
+                self.__external_deque.append(data)
+            else:
+                self.__internal_deque.append(data)
+        logging.debug("exiting recv threading in client inner")
+        exit(0)
+
+    def handle_queue(self):
+        pass
 
     def run(self):  # NOTE: need to add thread for sending/reciving
         pass
@@ -195,10 +228,10 @@ class Client(object):
         self.client_socket.send(header + data)
 
         # NOTE: this will be handled in the thread cuz its blocking
-        answer = self.client_socket.recv(4096)
+        """        answer = self.client_socket.recv(4096)
         logging.debug(f"asked server if {user_id} is online: {answer}")
         answer = AESCipher.decrypt_data_from_bytes(answer, self.__aes256key)
-        return answer
+        return answer"""
 
     def set_username(self, username: str):
         # set the username if not logged into the server
@@ -211,18 +244,23 @@ class Client(object):
     def get_username(self) -> str:
         return self.user_id
 
+    def get_external_queue_task(self):
+        if self.__external_deque:
+            return self.__external_deque.popleft()
+        return None
+
     def close(self):
         self.client_socket.close()
+        self.run_recv_thread = False
 
     @staticmethod
     def send_header(data: bytes) -> bytes:
         header = str(len(data)).zfill(4)
         return msgpack.dumps(header)
 
-
 if __name__ == '__main__':
     a = Client("yoram")
     a.secure_connection()
     a.login("123")
-    print(a.is_online('yoram'))
-    a.send("hello", "jeff")
+    a.close()   
+    print("end")
