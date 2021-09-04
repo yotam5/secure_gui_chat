@@ -42,7 +42,7 @@ class Client(object):
     def __init__(self, user_id: str = "DUMMY"):
         self.localhost: str = None
         self.port: int = None
-        self.client_socket = None
+        self.client_socket: socket.socket = None
         self.localhost, self.port = network_configuration_loader()
         self.port = int(self.port)
         self.user_id = user_id
@@ -156,9 +156,7 @@ class Client(object):
         logging.debug(f"aes key is {self.__aes256key}")
         data = {'Action': 'LOGIN', 'Data': {
             "user_id": self.user_id, "password": password}}
-        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        header = Client.send_header(data)
-        self.client_socket.send(header + data)
+        self.send(data)
         response = self.client_socket.recv(1024)
         response = msgpack.loads(response)
 
@@ -177,22 +175,21 @@ class Client(object):
         """
         data = {'Action': 'SIGN_UP', 'Data': {
             "user_id": self.user_id, "password": password}}
-        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        header = Client.send_header(data)
-        self.client_socket.send(header + data)
+        self.send(data)
         answer = self.client_socket.recv(1024)
         return msgpack.loads(answer)
 
-    def send(self, text: str, username: str):  # need thread ?
+    def send(self, data: dict):  # need thread ?
         # encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
-        data = {'Action': 'PASS_TO', 'Data': {
-            'user_id': username, 'text': text
-        }}
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         header = Client.send_header(data)
-        self.client_socket.send(header + data)
+        try:
+            self.client_socket.send(header + data)
+        except Exception as e:
+            logging.debug(f"error in send {e}")
 
     def recv_thread(self):
+        self.thread_exit = False
         logging.debug("recv_thread called inner client")
         while self.run_recv_thread:
             try:
@@ -200,6 +197,7 @@ class Client(object):
                 if len(data_size) != 5:
                     continue
             except Exception as e:
+                logging.debug(f"exception {e}")
                 continue
             data_size = int(msgpack.loads(data_size))
             data = self.client_socket.recv(data_size)
@@ -208,6 +206,7 @@ class Client(object):
                 self.__external_deque.append(data)
             else:
                 self.__internal_deque.append(data)
+        self.thread_exit = True
         logging.debug("exiting recv threading in client inner")
         exit(0)
 
@@ -223,9 +222,7 @@ class Client(object):
             of server answer
         """
         data = {'Action': 'SEARCH', 'Data': {'user_id': user_id}}
-        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        header = Client.send_header(data)
-        self.client_socket.send(header + data)
+        self.send(data)
 
         # NOTE: this will be handled in the thread cuz its blocking
         """        answer = self.client_socket.recv(4096)
@@ -250,13 +247,18 @@ class Client(object):
         return None
 
     def close(self):
-        self.client_socket.close()
         self.run_recv_thread = False
+        data = {'Action': 'EXIT'}
+        self.send(data)
+        while not self.thread_exit:
+            continue
+        self.client_socket.close()
 
     @staticmethod
     def send_header(data: bytes) -> bytes:
         header = str(len(data)).zfill(4)
         return msgpack.dumps(header)
+
 
 if __name__ == '__main__':
     a = Client("yoram")

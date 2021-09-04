@@ -1,6 +1,6 @@
 import sys
-from PySide2.QtCore import Qt, QPropertyAnimation, QTimer
-from PySide2.QtGui import QColor
+# from PySide2.QtCore import QPropertyAnimation, QTimer
+# from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QApplication, QMainWindow
 from main_ui import Ui_MainWindow
 import threading
@@ -56,7 +56,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.valid_reveiver(selected):
             self.talkingto = selected
         else:
-            print("unvalid")
+            logging.debug("unvalid")
 
     # NOTE: bruh why did i misstyped this
 
@@ -111,8 +111,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     target=self.handle_external_queue, args=[])
                 self.recv_queue_thread_obj.start()
             except Exception as e:
-                print(e)
-                print("error while connecting to server")
+                logging.debug(e)
+                logging.debug("error while connecting to server")
 
         # trying to auth with password
         if self.connected_to_server:
@@ -130,7 +130,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         user_id_receiver = self.comboBox.currentText()
         if self.valid_reveiver(user_id_receiver):
             self.message_to(text)
-            self.client_inner.send(text, user_id_receiver)
+            data = {'Action': 'PASS_TO', 'Data': {
+                'user_id': user_id_receiver, 'text': text}}
+            self.client_inner.send(data)
 
     def switch_to_page_2(self, function=False):
         # if function and function():
@@ -143,7 +145,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("handle external queue")
         while not self.client_thread_stop:
             task = self.client_inner.get_external_queue_task()
-            if not task : continue
+            if not task:
+                continue
             elif task["Action"] == "SEARCH":
                 logging.debug("added data to comboBox")
                 self.add_to_combo_box(task["Data"]["Result"])
@@ -153,10 +156,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def closeEvent(self, event):
         event.accept()
-        print("the ui is being closed")
+        logging.debug("the ui is being closed")
         self.client_thread_stop = True
-        print("ok")
         self.client_inner.close()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

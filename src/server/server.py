@@ -191,7 +191,7 @@ class Server(object):
                 client_data = AESCipher.decrypt_data_from_bytes(
                     client_data, secret)
                 logging.debug("handling data result")
-                logging.debug(f"go from client {client_data}")
+                logging.debug(f"got from client {client_data}")
                 # data_dict_keys = client_data.keys()
                 client_action = client_data['Action']
 
@@ -222,22 +222,28 @@ class Server(object):
                     logging.debug(
                         f"client trying to search user {data['user_id']}")
                     result = self.database_manager.is_online(data['user_id'])
-                    data = {"Action":"SEARCH", "Data":{"Result":result}}
-                    data = AESCipher.encrypt_data_to_bytes(data, secret)
-                    header = self.send_header(data)
-                    logging.debug("sending SEARCH result")
-                    client.send(header + data)
+                    response = {"Action": "SEARCH",
+                                "response": {"Result": result}}
 
+                    logging.debug("sending SEARCH result")
+                    self.send(response)
+                    
                     # FIXME: move onto different thread for sending?
                     """ FIXME: SEND MSG SIZE, and also use list if the
                         socket is used to send later, maybe use thread also 
                         or queue and server thread will handle this later?
                     """
 
+                elif client_action == "EXIT":
+                    logging.debug("client exiting action called")
+                    response = {"Action": "EXIT"}
+                    Server.send(response, client, secret)
+
                 my_deque.append("stop")
 
                 # FIXME: make this a thread?
                 dequed_value = my_deque.popleft()
+
                 while dequed_value != "stop":
                     logging.debug(f"dequed data is {dequed_value}")
                     data = dequed_value['Data']
@@ -270,7 +276,8 @@ class Server(object):
                         logging.debug(f"username {user_id} isnt a valid key")
                     dequed_value = my_deque.popleft()
 
-            except ConnectionResetError as e:
+            except ConnectionResetError:
+                logging.debug("connection error")
                 serve_client = False
 
         if client_name:
@@ -363,6 +370,15 @@ class Server(object):
         self.close_server()
         self.exit = True
         exit(0)
+
+    @staticmethod
+    def send(data: dict, client_socket: socket.socket, aeskey: bytes):
+        data = AESCipher.encrypt_data_to_bytes(data, aeskey)
+        header = Server.send_header(data)
+        try:
+            client_socket.send(header + data)
+        except Exception as e:
+            logging.debug(f"error in send {e}")
 
 
 if __name__ == '__main__':
