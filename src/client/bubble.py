@@ -167,7 +167,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.btn2)
 
         self.w = QWidget()
-        self.w.setLayout(l)
+        self.w.setLayout(layout)
         self.setCentralWidget(self.w)
 
     def resizeEvent(self, e):

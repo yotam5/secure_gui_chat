@@ -52,17 +52,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
             handle the combobox events when clicked to select a user
         """
+        """AllItems = [self.comboBox.itemText(i) for i in range(self.comboBox.count())]
+        print(AllItems)"""
         selected = self.comboBox.currentText()
-        if self.valid_reveiver(selected):
+        if self.valid_recv_selection(selected):
+            logging.debug(f"talking to {selected}")
             self.talkingto = selected
         else:
-            logging.debug("unvalid")
+            logging.debug(f"unvalid, {selected}")
 
-    # NOTE: bruh why did i misstyped this
-
-    def valid_reveiver(self, user_id: str) -> bool:
+    def valid_recv_selection(self, user_id: str) -> bool:
         unvalid = [self.comboBox.placeholderText(
         ), self.client_inner.get_username()]
+        logging.debug(f"unvalid {unvalid} param {user_id}")
         return user_id not in unvalid
 
     def user_search_key_event(self):
@@ -128,10 +130,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def send_button(self):
         text = self.text_to_send.toPlainText()
         user_id_receiver = self.comboBox.currentText()
-        if self.valid_reveiver(user_id_receiver):
+        logging.debug(f"{self.client_inner.get_username()} sending to {user_id_receiver}")
+        if self.valid_recv_selection(user_id_receiver):
             self.message_to(text)
             data = {'Action': 'PASS_TO', 'Data': {
-                'user_id': user_id_receiver, 'text': text}}
+                'target': user_id_receiver, 'text': text}}
             self.client_inner.send(data)
 
     def switch_to_page_2(self, function=False):
@@ -145,11 +148,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("handle external queue")
         while not self.client_thread_stop:
             task = self.client_inner.get_external_queue_task()
-            if not task:
-                continue
-            elif task["Action"] == "SEARCH":
-                logging.debug("added data to comboBox")
-                self.add_to_combo_box(task["Data"]["Result"])
+            if task:
+                task_data = task["Data"]
+                if task["Action"] == "SEARCH":
+                    logging.debug("search action finished")
+                    self.add_to_combo_box(task_data["Result"])
+
+                elif task["Action"] == "INCOMING":
+                    logging.debug("got message from someone")
+                    logging.debug(task)
+                    logging.debug(f"talking to {self.talkingto}")
+                    if task_data["source"] != '':
+                        self.message_from(task_data["text"])
+
         logging.debug("exiting thread in client_gui")
         self.exit_safly = True
         exit(0)

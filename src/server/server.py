@@ -44,6 +44,7 @@ class Server(object):
     def __init__(self):
         self.localhost, self.port = network_configuration_loader()
         self.clients: Dict[str, Tuple[socket.socket, _thread.LockType]] = {}
+        self.secrets: Dict[str, bytes] = {}
         self.publicKey = None
         self.privateKey = None
         self.directory = os.path.dirname(os.path.realpath(__file__))
@@ -212,7 +213,11 @@ class Server(object):
                         logging.debug(f"the login result is {login_result}")
                         client.send(msgpack.dumps(login_result))
                         if login_result:
+                            logging.debug(f"creating 2 dicts for {user_id}")
                             self.clients[user_id] = (client, threading.Lock())
+                            self.secrets[user_id] = secret
+                        client_name = user_id
+                        logging.debug(f"thread of {client_name}!")
 
                 elif client_action == 'PASS_TO':
                     my_deque.append(client_data)
@@ -223,11 +228,11 @@ class Server(object):
                         f"client trying to search user {data['user_id']}")
                     result = self.database_manager.is_online(data['user_id'])
                     response = {"Action": "SEARCH",
-                                "response": {"Result": result}}
+                                "Data": {"Result": result}}
 
                     logging.debug("sending SEARCH result")
-                    self.send(response)
-                    
+                    Server.send(response, client, secret)
+
                     # FIXME: move onto different thread for sending?
                     """ FIXME: SEND MSG SIZE, and also use list if the
                         socket is used to send later, maybe use thread also 
@@ -247,27 +252,26 @@ class Server(object):
                 while dequed_value != "stop":
                     logging.debug(f"dequed data is {dequed_value}")
                     data = dequed_value['Data']
-                    user_id = data['user_id']
+                    target = data['target']
                     text = data['text']
-                    logging.debug(f"{user_id}-{text}")
+                    logging.debug(f"reciver is {target}")
                     # NOTE: must be in dict
 
-                    if user_id in self.clients:
+                    if target in self.clients:
 
-                        logging.debug(f"using {user_id} is a valid key")
-                        receiver_socket, lock = self.clients[user_id]
+                        logging.debug(f"using {target} is a valid key")
+                        receiver_socket, lock = self.clients[target]
                         not_busy = lock.acquire()  # aquire socket for sending
 
                         if not_busy:
                             logging.debug("client no busy, sending msg")
                             sender_data = {'Action': 'INCOMING', 'Data': {
-                                'user_id': client_name, 'text': text
+                                'source': client_name, 'text': text
                             }}
-                            sender_data = \
-                                AESCipher.encrypt_data_to_bytes(
-                                    sender_data, secret)
-                            header = Server.send_header(sender_data)
-                            receiver_socket.send(header + sender_data)
+                            # header = Server.send_header(sender_data)
+                            # receiver_socket.send(header + sender_data) # FIXME: sends to itself?
+                            target_secret = self.secrets[target]
+                            Server.send(sender_data, receiver_socket, target_secret)
                             lock.release()  # release
                         else:
                             logging.debug("client busy, added to queue")
@@ -285,9 +289,6 @@ class Server(object):
         logging.debug("client disconnected")
 
         exit(0)  # terminate thread
-
-    def handle_protocol(self, data: dict):
-        pass
 
     def handle_signup(self, user_id: str, password: str) -> bool:
         """

@@ -214,6 +214,9 @@ class Ui_MainWindow(object):
 
     def message_to(self, text: str):
         self.model.add_message(bubble.USER_ME, text)
+        self.layoutChanged.emit()
 
     def message_from(self, text: str):
         self.model.add_message(bubble.USER_THEM, text)
+        self.layoutChanged.emit()
+

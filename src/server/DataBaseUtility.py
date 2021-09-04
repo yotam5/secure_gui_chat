@@ -1,10 +1,7 @@
 import sqlite3
-import os.path
 import logging
 from src.utilities import hash_utility
 
-# TODO: FIX user_id to id and the insert of hash salt etc
-# TODO: for bytes can do encode and decode
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -14,7 +11,7 @@ class DataBaseManager(object):
         class Utility that handles the server database
     """
 
-    def __init__(self, filename=f'./database.db'):
+    def __init__(self, filename='./database.db'):
         self.__conn = sqlite3.connect(filename, check_same_thread=False)
         self.__cursor = self.__conn.cursor()
         self.__cursor.row_factory = sqlite3.Row  # to be able to retrive a dict

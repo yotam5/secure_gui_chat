@@ -57,7 +57,7 @@ class Client(object):
         self.__aes256key: bytes = ""
         self.__internal_deque = deque()
         self.__external_deque = deque()
-        self.my_supported_actions = []
+        self.my_supported_actions = [""]
         self.run_recv_thread = False
         self.recv_thread_obj = None
 
@@ -201,6 +201,7 @@ class Client(object):
                 continue
             data_size = int(msgpack.loads(data_size))
             data = self.client_socket.recv(data_size)
+            logging.debug(f"recv thread got {data}")
             data = AESCipher.decrypt_data_from_bytes(data, self.__aes256key)
             if data["Action"] not in self.my_supported_actions:
                 self.__external_deque.append(data)
