@@ -193,6 +193,7 @@ class Client(object):
         logging.debug("recv_thread called inner client")
         while self.run_recv_thread:
             try:
+                logging.debug("block size recv call")
                 data_size = self.client_socket.recv(5)
                 if len(data_size) != 5:
                     continue

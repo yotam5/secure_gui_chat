@@ -10,6 +10,7 @@ from client import Client
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
+
 """
     TODO:
         -need to add receving thread to client maybe use queue?

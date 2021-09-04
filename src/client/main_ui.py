@@ -103,6 +103,7 @@ class Ui_MainWindow(object):
             "                  background-color: rgba(0, 255, 255, 90);\n"
             "border-radius: 10px;"
         )
+
         self.chat.setResizeMode(QListView.Adjust)
         self.chat.setItemDelegate(bubble.MessageDelegate())
         self.model = bubble.MessageModel()
@@ -214,9 +215,6 @@ class Ui_MainWindow(object):
 
     def message_to(self, text: str):
         self.model.add_message(bubble.USER_ME, text)
-        self.layoutChanged.emit()
 
     def message_from(self, text: str):
         self.model.add_message(bubble.USER_THEM, text)
-        self.layoutChanged.emit()
-

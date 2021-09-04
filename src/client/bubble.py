@@ -1,5 +1,8 @@
 
 import sys
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 from PySide2.QtCore import (
     QAbstractListModel,
@@ -92,7 +95,7 @@ class MessageDelegate(QStyledItemDelegate):
         painter.translate(textrect.topLeft())
         doc.drawContents(painter)
         painter.restore()
-
+        
     def sizeHint(self, option, index):
         _, text = index.model().data(index, Qt.DisplayRole)
         textrect = option.rect.marginsRemoved(TEXT_PADDING)
@@ -127,14 +130,17 @@ class MessageModel(QAbstractListModel):
         return len(self.messages)
 
     def add_message(self, who, text):
+
         """
         Add an message to our message list, getting the text from the QLineEdit
         """
         if text:  # Don't add empty strings.
             # Access the list via the model.
             self.messages.append((who, text))
+            
             # Trigger refresh.
             self.layoutChanged.emit()
+        logging.debug(f"add_msg called: {text} user: {who}")
 
 
 class MainWindow(QMainWindow):
