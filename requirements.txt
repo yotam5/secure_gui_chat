@@ -1,8 +1,8 @@
 
-pip install PySide2 
+PySide2 
 
-pip install pycryptodome
+pycryptodome
 
-pip install msgpack
+msgpack
 
-pip install pyDH
+pyDH
