@@ -2,12 +2,14 @@ import sys
 # from PySide2.QtCore import QPropertyAnimation, QTimer
 # from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide2.QtCore import QThreadPool
 from main_ui import Ui_MainWindow
 import threading
 from functools import partial
 from time import sleep
-from client import Client
 import logging
+from client import Client
+from workers import Worker
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -42,12 +44,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.comboBoxEvent)
 
         self.client_inner = Client()
-        self.show()
         self.connected_to_server = False
         self.talkingto = ""
-        self.exit_safly = False
-        self.client_thread_stop = False
-        self.recv_queue_thread_obj = None
+
+        # self.exit_safly = False
+        self.thread_pool = QThreadPool()
+        self.thread_funcs = [self.handle_external_queue]
+        self.workers = []
+        self.external_queue_worker = Worker(self.handle_external_queue)
+        self.external_queue_worker.signals.progress.connect(self.message_from)
+        self.workers.append(self.external_queue_worker)
+        #self.external_queue_worker.signals.progress.connect(self.message_from)
+        self.running = True
+        self.show()
+
+
 
     def comboBoxEvent(self, index):
         """
@@ -110,9 +121,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.debug("creating connectin & thread")
                 self.client_inner.secure_connection()
                 self.connected_to_server = True
-                self.recv_queue_thread_obj = threading.Thread(
-                    target=self.handle_external_queue, args=[])
-                self.recv_queue_thread_obj.start()
+                for worker in self.workers:
+                    self.thread_pool.start(worker)
             except Exception as e:
                 logging.debug(e)
                 logging.debug("error while connecting to server")
@@ -145,9 +155,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def switch_to_page_1(self):
         self.stackedWidget.setCurrentWidget(self.page_1)
 
-    def handle_external_queue(self):
+    def handle_external_queue(self, progress_callback):
         logging.debug("handle external queue")
-        while not self.client_thread_stop:
+        while self.running:
             task = self.client_inner.get_external_queue_task()
             if task:
                 task_data = task["Data"]
@@ -160,16 +170,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug(task)
                     logging.debug(f"talking to {self.talkingto}")
                     if task_data["source"] != '':
-                        self.message_from(task_data["text"])
+                       progress_callback.emit(task_data["text"])
 
         logging.debug("exiting thread in client_gui")
-        self.exit_safly = True
-        exit(0)
 
     def closeEvent(self, event):
         event.accept()
         logging.debug("the ui is being closed")
-        self.client_thread_stop = True
+        self.running = False
         self.client_inner.close()
 
 

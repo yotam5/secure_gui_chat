@@ -1,37 +1,24 @@
 
-import sys
-import logging
+from PySide2.QtWidgets import QStyledItemDelegate
 
-logging.basicConfig(level=logging.DEBUG)
-
-from PySide2.QtCore import (
-    QAbstractListModel,
-    QMargins,
-    QPoint,
-    QRectF,
-    QSize,
-    Qt,
-)
 from PySide2.QtGui import (
     QColor,
-    QFont,
-    QPainter,
     QTextDocument,
     QTextOption,
     QPolygon
 )
+from PySide2.QtCore import (
+    QAbstractListModel,
+    QMargins,
+    QPoint,
+    Qt,
+)
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 
 # from PySide2.QtGui import
-from PySide2.QtWidgets import (
-    QApplication,
-    QLineEdit,
-    QListView,
-    QMainWindow,
-    QPushButton,
-    QStyledItemDelegate,
-    QVBoxLayout,
-    QWidget,
-)
 
 USER_ME = 0
 USER_THEM = 1
@@ -95,7 +82,7 @@ class MessageDelegate(QStyledItemDelegate):
         painter.translate(textrect.topLeft())
         doc.drawContents(painter)
         painter.restore()
-        
+
     def sizeHint(self, option, index):
         _, text = index.model().data(index, Qt.DisplayRole)
         textrect = option.rect.marginsRemoved(TEXT_PADDING)
@@ -130,64 +117,13 @@ class MessageModel(QAbstractListModel):
         return len(self.messages)
 
     def add_message(self, who, text):
-
         """
         Add an message to our message list, getting the text from the QLineEdit
         """
         if text:  # Don't add empty strings.
             # Access the list via the model.
             self.messages.append((who, text))
-            
+
             # Trigger refresh.
             self.layoutChanged.emit()
-        logging.debug(f"add_msg called: {text} user: {who}")
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super(MainWindow, self).__init__()
-
-        # Layout the UI
-        layout = QVBoxLayout()
-
-        self.message_input = QLineEdit("Enter message here")
-
-        # Buttons for from/to messages.
-        self.btn1 = QPushButton("<")
-        self.btn2 = QPushButton(">")
-
-        self.messages = QListView()
-        self.messages.setResizeMode(QListView.Adjust)
-        # Use our delegate to draw items in this view.
-        self.messages.setItemDelegate(MessageDelegate())
-
-        self.model = MessageModel()
-        self.messages.setModel(self.model)
-
-        self.btn1.pressed.connect(self.message_to)
-        self.btn2.pressed.connect(self.message_from)
-
-        layout.addWidget(self.messages)
-        layout.addWidget(self.message_input)
-        layout.addWidget(self.btn1)
-        layout.addWidget(self.btn2)
-
-        self.w = QWidget()
-        self.w.setLayout(layout)
-        self.setCentralWidget(self.w)
-
-    def resizeEvent(self, e):
-        self.model.layoutChanged.emit()
-
-    def message_to(self):
-        self.model.add_message(USER_ME, self.message_input.text())
-
-    def message_from(self):
-        self.model.add_message(USER_THEM, self.message_input.text())
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    app.exec_()
+            logging.debug(f"add_msg called: {text} user: {who}")
