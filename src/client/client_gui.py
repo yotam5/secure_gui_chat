@@ -13,12 +13,6 @@ from workers import Worker
 
 logging.basicConfig(level=logging.DEBUG)
 
-"""
-    TODO:
-        -need to add receving thread to client maybe use queue?
-        -need when client receive add send_from in gui
-"""
-
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
@@ -51,7 +45,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.thread_pool = QThreadPool()
         self.thread_funcs = [self.handle_external_queue]
         self.workers = []
-        self.external_queue_worker = Worker(self.handle_external_queue)
+        self.   external_queue_worker = Worker(self.handle_external_queue)
         self.external_queue_worker.signals.progress.connect(self.message_from)
         self.workers.append(self.external_queue_worker)
         #self.external_queue_worker.signals.progress.connect(self.message_from)
@@ -67,13 +61,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """AllItems = [self.comboBox.itemText(i) for i in range(self.comboBox.count())]
         print(AllItems)"""
         selected = self.comboBox.currentText()
-        if self.valid_recv_selection(selected):
+        if self.is_valid_conversation(selected):
             logging.debug(f"talking to {selected}")
             self.talkingto = selected
         else:
             logging.debug(f"unvalid, {selected}")
 
-    def valid_recv_selection(self, user_id: str) -> bool:
+    def is_valid_conversation(self, user_id: str) -> bool:
         unvalid = [self.comboBox.placeholderText(
         ), self.client_inner.get_username()]
         logging.debug(f"unvalid {unvalid} param {user_id}")
@@ -142,10 +136,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         text = self.text_to_send.toPlainText()
         user_id_receiver = self.comboBox.currentText()
         logging.debug(f"{self.client_inner.get_username()} sending to {user_id_receiver}")
-        if self.valid_recv_selection(user_id_receiver):
+        if self.is_valid_conversation(user_id_receiver):
             self.message_to(text)
             data = {'Action': 'PASS_TO', 'Data': {
                 'target': user_id_receiver, 'text': text}}
+            self.text_to_send.setText('')
             self.client_inner.send(data)
 
     def switch_to_page_2(self, function=False):
@@ -169,8 +164,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug("got message from someone")
                     logging.debug(task)
                     logging.debug(f"talking to {self.talkingto}")
-                    if task_data["source"] != '':
-                       progress_callback.emit(task_data["text"])
+                    if self.is_valid_conversation(task_data['source']):
+                        progress_callback.emit(task_data["text"])
 
         logging.debug("exiting thread in client_gui")
 
@@ -178,7 +173,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event.accept()
         logging.debug("the ui is being closed")
         self.running = False
-        self.client_inner.close()
+        try:
+            self.client_inner.close()
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':

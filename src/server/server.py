@@ -10,6 +10,7 @@ import zlib
 import re
 from typing import Tuple, Dict
 from queue import deque
+import sys
 
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
@@ -113,12 +114,13 @@ class Server(object):
         """
             rsa handshake
         """
+
         client_pubKey = client_data['PubKey']
         client_pubKey = rsa_utility.rsaKeyFromBase64String(
             client_pubKey)
         # logging.debug(f"client pub key {client_pubKey}")
         data = rsa_utility.rsaKeyToBase64String(self.publicKey.exportKey())
-        client.send(msgpack.packb(data))
+        client.send(msgpack.dumps(data))
         return client_pubKey
 
     def secure_connection_setup(self, client: socket.socket) -> str:
@@ -137,7 +139,8 @@ class Server(object):
 
         logging.debug("start rsa exchange")
         # first action must be rsa exchange
-        client_data = msgpack.loads(client_data)
+        client_data = msgpack.loads(client_data,raw=False)
+        logging.debug(f"line 141 {client_data}")
         clientPubRsa, clientPubBox = self.handle_exchange(
             client_data, client)
         logging.debug("rsa connection established")
@@ -152,11 +155,11 @@ class Server(object):
         bytesPubKey = str(privateKey.gen_public_key()).encode('utf-8')
         bytesPubKey = zlib.compress(bytesPubKey)
         data_to_send = {'Action': 'DiffieHellman', 'PubKey': bytesPubKey}
-        data_to_send = msgpack.packb(data_to_send)
-
+        data_to_send = msgpack.dumps(data_to_send)
+        logging.debug(data_to_send)
         client.send(clientPubBox.encrypt(data_to_send))
         client_response = client.recv(4096)
-        client_response = msgpack.loads(myBox.decrypt(client_response))
+        client_response = msgpack.loads(myBox.decrypt(client_response),raw=False)
         logging.debug("end diffie hellman")
         clientPubKey = client_response['PubKey']
         clientPubKey = int(zlib.decompress(clientPubKey).decode('utf-8'))
@@ -180,7 +183,7 @@ class Server(object):
         # can alll with dict['key'](param)
         client_name: str = ""
         my_deque = deque()
-
+        logging.debug('start while loop to serve client')
         while serve_client:
             try:
                 client_msg_size = client.recv(5)

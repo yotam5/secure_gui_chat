@@ -1,6 +1,7 @@
 # built in
 import socket
 import os.path
+import sys
 import logging
 import zlib
 from queue import deque
@@ -18,6 +19,8 @@ from Crypto.PublicKey.RSA import importKey
 from src.utilities.config_utility import network_configuration_loader
 
 logging.basicConfig(level=logging.DEBUG)
+
+
 
 # NOTE: to add port forwarding automation
 # NOTE: to add 2 FA with email or etc
@@ -104,7 +107,7 @@ class Client(object):
         """
         data = {'Action': "EXCHANGE", 'PubKey':
                 rsa_utility.rsaKeyToBase64String(self.publicKey.exportKey())}
-        self.client_socket.send(msgpack.packb(data))
+        self.client_socket.send(msgpack.dumps(data))
         self.serverPublicKey = self.client_socket.recv(4096)
         self.serverPublicKey = rsa_utility.rsaKeyFromBase64String(
             self.serverPublicKey)
@@ -133,14 +136,14 @@ class Client(object):
         bytesPubKey = str(privateKey.gen_public_key()).encode('utf-8')
         bytesPubKey = zlib.compress(bytesPubKey)
         data_to_send = {'Action': 'DiffieHellman', 'PubKey': bytesPubKey}
-        data_to_send = msgpack.packb(data_to_send)
-        logging.debug(self.decrypyor.decrypt(server_data))
+        data_to_send = msgpack.dumps(data_to_send)
+        # logging.debug(self.decrypyor.decrypt(server_data))
         self.client_socket.send(
             self.encryptor.encrypt(data_to_send))
 
         logging.debug("end diffie hellman")
+        logging.debug(self.decrypyor.decrypt(server_data))
         server_data = msgpack.loads(self.decrypyor.decrypt(server_data))
-        logging.debug(server_data)
         serverPubKey = server_data['PubKey']
         serverPubKey = int(zlib.decompress(serverPubKey).decode('utf-8'))
         secret = privateKey.gen_shared_key(serverPubKey)
@@ -198,7 +201,7 @@ class Client(object):
                 if len(data_size) != 5:
                     continue
             except Exception as e:
-                logging.debug(f"exception {e}")
+                logging.debug(f"exception in recv thread {e}")
                 continue
             data_size = int(msgpack.loads(data_size))
             data = self.client_socket.recv(data_size)
@@ -212,8 +215,6 @@ class Client(object):
         logging.debug("exiting recv threading in client inner")
         exit(0)
 
-    def handle_queue(self):
-        pass
 
     def run(self):  # NOTE: need to add thread for sending/reciving
         pass
@@ -266,5 +267,5 @@ if __name__ == '__main__':
     a = Client("yoram")
     a.secure_connection()
     a.login("123")
-    a.close()   
+    a.close()
     print("end")
