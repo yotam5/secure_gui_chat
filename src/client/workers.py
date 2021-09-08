@@ -74,6 +74,6 @@ class Worker(QRunnable):
 
         self.signals.result.emit(result)  # Return the result of the processing
         self.signals.finished.emit()  # disconnected
-        
+
     def kill(self):
         self.is_killed = True

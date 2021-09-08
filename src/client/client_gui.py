@@ -4,7 +4,6 @@ import sys
 from PySide2.QtWidgets import QApplication, QMainWindow
 from PySide2.QtCore import QThreadPool
 from main_ui import Ui_MainWindow
-import threading
 from functools import partial
 from time import sleep
 import logging
@@ -48,18 +47,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.   external_queue_worker = Worker(self.handle_external_queue)
         self.external_queue_worker.signals.progress.connect(self.message_from)
         self.workers.append(self.external_queue_worker)
-        #self.external_queue_worker.signals.progress.connect(self.message_from)
+        # self.external_queue_worker.signals.progress.connect(self.message_from)
         self.running = True
         self.show()
-
-
 
     def comboBoxEvent(self, index):
         """
             handle the combobox events when clicked to select a user
         """
-        """AllItems = [self.comboBox.itemText(i) for i in range(self.comboBox.count())]
-        print(AllItems)"""
         selected = self.comboBox.currentText()
         if self.is_valid_conversation(selected):
             logging.debug(f"talking to {selected}")
@@ -135,7 +130,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def send_button(self):
         text = self.text_to_send.toPlainText()
         user_id_receiver = self.comboBox.currentText()
-        logging.debug(f"{self.client_inner.get_username()} sending to {user_id_receiver}")
+        logging.debug(
+            f"{self.client_inner.get_username()} sending to {user_id_receiver}")
         if self.is_valid_conversation(user_id_receiver):
             self.message_to(text)
             data = {'Action': 'PASS_TO', 'Data': {

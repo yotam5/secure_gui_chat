@@ -10,7 +10,6 @@ import zlib
 import re
 from typing import Tuple, Dict
 from queue import deque
-import sys
 
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
@@ -139,7 +138,7 @@ class Server(object):
 
         logging.debug("start rsa exchange")
         # first action must be rsa exchange
-        client_data = msgpack.loads(client_data,raw=False)
+        client_data = msgpack.loads(client_data, raw=False)
         logging.debug(f"line 141 {client_data}")
         clientPubRsa, clientPubBox = self.handle_exchange(
             client_data, client)
@@ -159,7 +158,8 @@ class Server(object):
         logging.debug(data_to_send)
         client.send(clientPubBox.encrypt(data_to_send))
         client_response = client.recv(4096)
-        client_response = msgpack.loads(myBox.decrypt(client_response),raw=False)
+        client_response = msgpack.loads(
+            myBox.decrypt(client_response), raw=False)
         logging.debug("end diffie hellman")
         clientPubKey = client_response['PubKey']
         clientPubKey = int(zlib.decompress(clientPubKey).decode('utf-8'))
@@ -238,7 +238,7 @@ class Server(object):
 
                     # FIXME: move onto different thread for sending?
                     """ FIXME: SEND MSG SIZE, and also use list if the
-                        socket is used to send later, maybe use thread also 
+                        socket is used to send later, maybe use thread also
                         or queue and server thread will handle this later?
                     """
 
@@ -271,10 +271,9 @@ class Server(object):
                             sender_data = {'Action': 'INCOMING', 'Data': {
                                 'source': client_name, 'text': text
                             }}
-                            # header = Server.send_header(sender_data)
-                            # receiver_socket.send(header + sender_data) # FIXME: sends to itself?
                             target_secret = self.secrets[target]
-                            Server.send(sender_data, receiver_socket, target_secret)
+                            Server.send(
+                                sender_data, receiver_socket, target_secret)
                             lock.release()  # release
                         else:
                             logging.debug("client busy, added to queue")
@@ -297,11 +296,12 @@ class Server(object):
         """
             create a new user into the database
         """
-        signup_result: bool = False
+        signup_result = False
         logging.debug("client signup called")
         if not self.database_manager.is_exist(user_id):
             logging.debug(f"the user {user_id} can be created")
-            if Server.strong_password(password):
+            # if Server.strong_password(password):
+            if True:  # NOTE: just to be able for fast testing
                 logging.debug("the password is stronk")
                 hashed, salt = hash_utility.generate_hash(password)
                 self.database_manager.add_user(user_id, hashed, salt, status=1)
@@ -318,7 +318,7 @@ class Server(object):
         """
         logging.debug("client login handle called")
 
-        login_result: bool = self.database_manager.login(user_id, password)
+        login_result = self.database_manager.login(user_id, password)
         return login_result
 
     def handle_exchange(self, client_data: dict, client: socket.socket):

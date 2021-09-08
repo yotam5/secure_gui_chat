@@ -10,7 +10,7 @@ def network_configuration_loader(filename="config.ini"):
     conf_dir = os.path.join(script_abs, "../config/config.ini")
     config = ConfigParser()
     config.read(conf_dir)
-    print(os.path.exists('../config/config.ini'))
+    # print(os.path.exists('../config/config.ini'))
     net_info_dict = config['net_info']
     localhost = net_info_dict['localhost']
     port = net_info_dict['port']

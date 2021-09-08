@@ -1,8 +1,6 @@
 from Crypto.PublicKey import RSA
-import binascii
 import base64
 import logging
-from hashlib import sha512
 from Crypto.Signature.pkcs1_15 import PKCS115_SigScheme
 from Crypto.Hash import SHA256
 from Crypto.PublicKey.RSA import importKey
@@ -75,6 +73,7 @@ def verify_signature(data: bytes, signature: bytes, pubKey: bytes) -> bool:
         verifier.verify(hash, signature)
         return True
     except Exception as e:  # InvalidSignature
+        print(e)
         return False
 
 
@@ -94,4 +93,5 @@ if __name__ == "__main__":
     """msg = 'a'*10_00000
     sig = create_signature(msg.encode(), keyPair)
     print(sig)
-    print(verify_signature(b'123', sig, keyPair.publickey().exportKey("PEM")))"""
+    print(verify_signature(b'123', sig, keyPair.publickey().exportKey("PEM")))
+    """
