@@ -127,13 +127,25 @@ class Ui_MainWindow(object):
             "color: rgb(7,11,55);\n"
             " border-radius: 10px;"
         )
-        self.lineEdit = QLineEdit(self.page_2)
-        self.lineEdit.setObjectName("lineEdit")
-        self.lineEdit.setGeometry(QRect(130, 140, 241, 51))
-        self.lineEdit.setStyleSheet(
+        self.user_search_line = QLineEdit(self.page_2)
+        self.user_search_line.setObjectName("lineEdit")
+        self.user_search_line.setGeometry(QRect(130, 140, 241, 51))
+        self.user_search_line.setStyleSheet(
             "border: 3px light green; \n"
             "                  background-color: rgba(0, 255, 255, 90);\n"
             "border-radius: 10px;"
+        )
+
+        self.group_creator = QLineEdit(self.page_2)
+        self.group_creator.setObjectName("group_creator")
+        self.group_creator.setGeometry(QRect(130, 220, 241, 51))
+        self.group_creator.setStyleSheet(
+            "border: 3px light green; \n"
+            "                  background-color: rgba(0, 255, 255, 90);\n"
+            "border-radius: 10px;"
+        )
+        self.group_creator.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "group creator:", None)
         )
         self.comboBox = QComboBox(self.page_2)
         self.comboBox.addItem("")
@@ -198,7 +210,7 @@ class Ui_MainWindow(object):
         )
         self.send_btn.setText(
             QCoreApplication.translate("MainWindow", "Send", None))
-        self.lineEdit.setPlaceholderText(
+        self.user_search_line.setPlaceholderText(
             QCoreApplication.translate("MainWindow", "search user:", None)
         )
 

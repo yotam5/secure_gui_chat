@@ -21,10 +21,9 @@ from src.utilities.config_utility import network_configuration_loader
 logging.basicConfig(level=logging.DEBUG)
 
 
-
 # NOTE: to add port forwarding automation
 # NOTE: to add 2 FA with email or etc
-# NOTE: to check auth using server perment pem?
+# NOTE: to check auth using server perment pem
 
 """
     FIXME:
@@ -33,11 +32,6 @@ logging.basicConfig(level=logging.DEBUG)
         and also ill send the msg size before the message itself,
         that will fix the problem of different sends and received at
         the same time,
-        for example: is_online will send and the result
-                    will be received by the thread, then
-                    while iterating over the queue when data
-                    with action of "is_online" the is_online function
-                    will handle this
 """
 
 
@@ -214,7 +208,6 @@ class Client(object):
         self.thread_exit = True
         logging.debug("exiting recv threading in client inner")
         exit(0)
-
 
     def run(self):  # NOTE: need to add thread for sending/reciving
         pass

@@ -21,7 +21,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.lineEdit.returnPressed.connect(self.user_search_key_event)
+        self.user_search_line.returnPressed.connect(self.user_search_key_event)
 
         self.login_btn.clicked.connect(
             partial(self.login_signup_to_server, self.login_btn,
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
             handle enter key event to search a user
         """
-        searched_usr_id = self.lineEdit.text()
+        searched_usr_id = self.user_search_line.text()
         if searched_usr_id != self.client_inner.get_username():
             self.client_inner.is_online(searched_usr_id)
 
