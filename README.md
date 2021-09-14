@@ -10,7 +10,8 @@ In the project i used rsa, diffie hellman, aes and hashing to simulate a secure 
 ![chat screen](chat_screen_example.png?raw=true "chat screen")
 ![chat example](chat_example.png?raw=true "chat example")
 ## Usage
-
+NOTE: please add to the python path the folder of the project or move the files by hand to the folders where used
+      and remove the src., for now i use it in this way so it will be easier to implement stuff common for both
 ```bash
 python3 server.py
 ```
