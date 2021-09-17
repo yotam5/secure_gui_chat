@@ -6,9 +6,16 @@
 secure_gui_chat is my python project about networking that the main focus is about security.
 In the project i used rsa, diffie hellman, aes and hashing to simulate a secure chat
 
+# Login Screen
 ![login screen](login_screen_example.png?raw=true "login screen")
+
+# Chat Screen
 ![chat screen](chat_screen_example.png?raw=true "chat screen")
+
+# Chat Example
 ![chat example](chat_example.png?raw=true "chat example")
+
+# Running example
 ![running example](https://s9.gifyu.com/images/test5f60ba555e75ba1b.gif "running example")
 
 ## Usage
