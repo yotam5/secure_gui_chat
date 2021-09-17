@@ -9,6 +9,7 @@ from time import sleep
 import logging
 from client import Client
 from workers import Worker
+from time import sleep
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -162,7 +163,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug(f"talking to {self.talkingto}")
                     if self.is_valid_conversation(task_data['source']):
                         progress_callback.emit(task_data["text"])
-
+            sleep(0.05)
         logging.debug("exiting thread in client_gui")
 
     def closeEvent(self, event):

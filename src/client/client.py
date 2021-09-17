@@ -1,7 +1,7 @@
 # built in
 import socket
 import os.path
-import sys
+from time import sleep
 import logging
 import zlib
 from queue import deque
@@ -205,6 +205,7 @@ class Client(object):
                 self.__external_deque.append(data)
             else:
                 self.__internal_deque.append(data)
+            sleep(0.05)
         self.thread_exit = True
         logging.debug("exiting recv threading in client inner")
         exit(0)

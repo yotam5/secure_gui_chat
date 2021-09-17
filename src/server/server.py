@@ -10,6 +10,7 @@ import zlib
 import re
 from typing import Tuple, Dict
 from queue import deque
+from time import sleep
 
 # dependecies
 from Crypto.Cipher import PKCS1_OAEP
@@ -285,7 +286,7 @@ class Server(object):
             except ConnectionResetError:
                 logging.debug("connection error")
                 serve_client = False
-
+            sleep(0.05)
         if client_name:
             self.database_manager.logout(client_name)
         logging.debug("client disconnected")
@@ -354,6 +355,7 @@ class Server(object):
             client_thread = threading.Thread(
                 target=self.client_handle, args=[client])
             client_thread.start()
+            sleep(0.05)
         logging.debug("add_client is exiting")
         exit(0)
 
