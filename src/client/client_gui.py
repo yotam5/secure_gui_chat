@@ -87,6 +87,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         range(self.comboBox.count())]
             if item not in AllItems:
                 self.comboBox.addItem(item)
+                return True
+        return False
 
     def login_signup_to_server(self, btn, function):
         """
@@ -142,10 +144,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def switch_to_page_2(self, function=False):
         # if function and function():
+        # chat screen
         self.stackedWidget.setCurrentWidget(self.page_2)
 
     def switch_to_page_1(self):
+        # login page
         self.stackedWidget.setCurrentWidget(self.page_1)
+
+    def switch_to_page_3(self):
+        # group creator/ appender screen?
+        pass
 
     def handle_external_queue(self, progress_callback):
         logging.debug("handle external queue")
@@ -155,7 +163,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 task_data = task["Data"]
                 if task["Action"] == "SEARCH":
                     logging.debug("search action finished")
-                    self.add_to_combo_box(task_data["Result"])
+                    if not self.add_to_combo_box(task_data["Result"]):
+                        unvalid_user = self.user_search_line.text()
+                        indication_msg = f"no user'{unvalid_user}'"
+                        self.user_search_line.setText(indication_msg)
 
                 elif task["Action"] == "INCOMING":
                     logging.debug("got message from someone")
