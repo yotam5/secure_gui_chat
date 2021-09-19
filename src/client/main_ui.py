@@ -11,7 +11,6 @@
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
-import bubble
 import pictures
 
 
@@ -36,6 +35,12 @@ class Ui_MainWindow(object):
         self.page_1.setObjectName("page_1")
         self.page_1.setMinimumSize(QSize(1280, 720))
         self.page_1.setMaximumSize(QSize(1280, 720))
+
+        """self.page_3 = QWidget()
+        self.page_3.setObjectName("page_3")
+        self.page_3.setMinimumSize(QSize(1280, 720))
+        self.page_3.setMaximumSize(QSize(1280, 720))"""
+
         self.label = QLabel(self.page_1)
         self.label.setObjectName("label")
         self.label.setGeometry(QRect(0, -1, 1280, 711))
@@ -104,10 +109,6 @@ class Ui_MainWindow(object):
             "border-radius: 10px;"
         )
 
-        self.chat.setResizeMode(QListView.Adjust)
-        self.chat.setItemDelegate(bubble.MessageDelegate())
-        self.model = bubble.MessageModel()
-        self.chat.setModel(self.model)
 
         # self.chat.setReadOnly(True)
         self.text_to_send = QTextEdit(self.page_2)
@@ -136,17 +137,7 @@ class Ui_MainWindow(object):
             "border-radius: 10px;"
         )
 
-        self.group_creator = QLineEdit(self.page_2)
-        self.group_creator.setObjectName("group_creator")
-        self.group_creator.setGeometry(QRect(130, 220, 241, 51))
-        self.group_creator.setStyleSheet(
-            "border: 3px light green; \n"
-            "                  background-color: rgba(0, 255, 255, 90);\n"
-            "border-radius: 10px;"
-        )
-        self.group_creator.setPlaceholderText(
-            QCoreApplication.translate("MainWindow", "group creator:", None)
-        )
+
         self.comboBox = QComboBox(self.page_2)
         self.comboBox.addItem("")
         self.comboBox.setObjectName("comboBox")
@@ -186,17 +177,7 @@ class Ui_MainWindow(object):
             QCoreApplication.translate("MainWindow", "Sign Up", None)
         )
         self.label_2.setText("")
-        """self.chat.setHtml(
-            QCoreApplication.translate(
-                "MainWindow",
-                '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">\n'
-                '<html><head><meta name="qrichtext" content="1" /><style type="text/css">\n'
-                "p, li { white-space: pre-wrap; }\n"
-                "</style></head><body style=\" font-family:'Apercu Mono'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-                '<p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;"><br /></p></body></html>',
-                None,
-            )
-        )"""
+
         self.text_to_send.setHtml(
             QCoreApplication.translate(
                 "MainWindow",
@@ -222,11 +203,3 @@ class Ui_MainWindow(object):
 
     # retranslateUi
 
-    def resizeEvent(self, e):
-        self.model.layoutChanged.emit()
-
-    def message_to(self, text: str):
-        self.model.add_message(bubble.USER_ME, text)
-
-    def message_from(self, text: str):
-        self.model.add_message(bubble.USER_THEM, text)

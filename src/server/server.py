@@ -189,8 +189,10 @@ class Server(object):
             try:
                 client_msg_size = client.recv(5)
                 if len(client_msg_size) != 5:
-                    continue
-                print(f"size of msg {client_msg_size}")
+                    logging.debug(f"unvalid msg len {len(client_msg_size)}")
+                    continue  # ignore, unvalid size
+
+                logging.debug(f"size of msg {client_msg_size}")
                 client_msg_size = int(msgpack.loads(client_msg_size))
                 client_data = client.recv(client_msg_size)
                 client_data = AESCipher.decrypt_data_from_bytes(
@@ -236,12 +238,6 @@ class Server(object):
 
                     logging.debug("sending SEARCH result")
                     Server.send(response, client, secret)
-
-                    # FIXME: move onto different thread for sending?
-                    """ FIXME: SEND MSG SIZE, and also use list if the
-                        socket is used to send later, maybe use thread also
-                        or queue and server thread will handle this later?
-                    """
 
                 elif client_action == "EXIT":
                     logging.debug("client exiting action called")
@@ -293,6 +289,41 @@ class Server(object):
 
         exit(0)  # terminate thread
 
+    def client_incoming_thread(self, my_deque: deque, client_name: str):
+        my_deque.append("stop")
+
+        dequed_value = my_deque.popleft()
+
+        while dequed_value != "stop":
+            logging.debug(f"dequed data is {dequed_value}")
+            data = dequed_value['Data']
+            target = data['target']
+            text = data['text']
+            logging.debug(f"reciver is {target}")
+            # NOTE: must be in dict
+
+            if target in self.clients:
+
+                logging.debug(f"using {target} is a valid key")
+                receiver_socket, lock = self.clients[target]
+                not_busy = lock.acquire()  # aquire socket for sending
+
+                if not_busy:
+                    logging.debug("client no busy, sending msg")
+                    sender_data = {'Action': 'INCOMING', 'Data': {
+                        'source': client_name, 'text': text
+                    }}
+                    target_secret = self.secrets[target]
+                    Server.send(
+                        sender_data, receiver_socket, target_secret)
+                    lock.release()  # release
+                else:
+                    logging.debug("client busy, added to queue")
+                    my_deque.append(dequed_value)
+            else:
+                pass
+            dequed_value = my_deque.popleft()
+
     def handle_signup(self, user_id: str, password: str) -> bool:
         """
             create a new user into the database
@@ -338,11 +369,11 @@ class Server(object):
             password)
         return bool(result)
 
-    def broadcast(self, data):  # NOTE: FIX
+    def broadcast(self, data):  # FIXME: race condition
         """
             broadcast msg to all clients
         """
-        [client.send(msgpack.dups(data)) for client in self.clients]
+        [client.send(msgpack.dumps(data)) for client in self.clients]
 
     def add_client(self):
         """

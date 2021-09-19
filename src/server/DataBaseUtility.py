@@ -52,6 +52,7 @@ class DataBaseManager(object):
         return False
 
     def logout(self, user_id: str):  # set online to 0
+        logging.debug(f"client {user_id} is logging out")
         self.__cursor.execute(
             f"UPDATE users_data SET online='0' WHERE id='{user_id}'")
         self.__conn.commit()

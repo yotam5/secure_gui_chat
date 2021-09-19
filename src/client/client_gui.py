@@ -1,7 +1,7 @@
 import sys
 # from PySide2.QtCore import QPropertyAnimation, QTimer
 # from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide2.QtWidgets import QApplication, QMainWindow, QListView
 from PySide2.QtCore import QThreadPool
 from main_ui import Ui_MainWindow
 from functools import partial
@@ -9,9 +9,23 @@ from time import sleep
 import logging
 from client import Client
 from workers import Worker
-from time import sleep
+import bubble
 
 logging.basicConfig(level=logging.DEBUG)
+
+"""
+    TODO:
+        need to add group creator window switchted from
+        the chat window
+        needed functionality:
+            1-creating a group
+            2-adding users to the group
+            3-removing user from the group
+            4-rename the group
+            5-delete the group
+            6-making admin to the group
+
+"""
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -50,6 +64,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.workers.append(self.external_queue_worker)
         # self.external_queue_worker.signals.progress.connect(self.message_from)
         self.running = True
+        self.chat.setResizeMode(QListView.Adjust)
+        self.chat.setItemDelegate(bubble.MessageDelegate())
+        self.model = bubble.MessageModel()
+        self.chat.setModel(self.model)
         self.show()
 
     def comboBoxEvent(self, index):
@@ -185,6 +203,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.client_inner.close()
         except Exception:
             pass
+
+    def resizeEvent(self, e):
+        self.model.layoutChanged.emit()
+
+    def message_to(self, text: str):
+        self.model.add_message(bubble.USER_ME, text)
+
+    def message_from(self, text: str):
+        self.model.add_message(bubble.USER_THEM, text)
 
 
 if __name__ == '__main__':
