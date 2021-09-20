@@ -1,8 +1,8 @@
 import sys
 # from PySide2.QtCore import QPropertyAnimation, QTimer
 # from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QApplication, QMainWindow, QListView
-from PySide2.QtCore import QThreadPool
+from PySide2.QtWidgets import QApplication, QMainWindow, QListView, QLineEdit
+from PySide2.QtCore import QThreadPool, QRect, QSize
 from main_ui import Ui_MainWindow
 from functools import partial
 from time import sleep
@@ -54,7 +54,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.client_inner = Client()
         self.connected_to_server = False
         self.talkingto = ""
-
+        self.password_field.setEchoMode(QLineEdit.Password)
         # self.exit_safly = False
         self.thread_pool = QThreadPool()
         self.thread_funcs = [self.handle_external_queue]
@@ -64,6 +64,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.workers.append(self.external_queue_worker)
         # self.external_queue_worker.signals.progress.connect(self.message_from)
         self.running = True
+        self.chat = QListView(self.page_2)
+        self.chat.setObjectName("chat")
+        self.chat.setGeometry(QRect(480, 20, 771, 581))
+        self.chat.setMinimumSize(QSize(10, 10))
+        self.chat.setStyleSheet(
+            "border: 3px light green; \n"
+            "                  background-color: rgba(0, 255, 255, 90);\n"
+            "border-radius: 10px;"
+        )
         self.chat.setResizeMode(QListView.Adjust)
         self.chat.setItemDelegate(bubble.MessageDelegate())
         self.model = bubble.MessageModel()
