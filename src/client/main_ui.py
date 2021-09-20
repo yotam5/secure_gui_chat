@@ -93,7 +93,6 @@ class Ui_MainWindow(object):
         self.label_2.setScaledContents(True)
         self.label_2.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         self.label_2.setObjectName("label_2")
-
         self.text_to_send = QtWidgets.QTextEdit(self.page_2)
         self.text_to_send.setGeometry(QtCore.QRect(480, 620, 591, 61))
         self.text_to_send.setMinimumSize(QtCore.QSize(10, 10))
@@ -202,7 +201,6 @@ class Ui_MainWindow(object):
             _translate("MainWindow", "enter password:"))
         self.login_btn.setText(_translate("MainWindow", "Login"))
         self.sign_up_btn.setText(_translate("MainWindow", "Sign Up"))
-    
         self.text_to_send.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
                                              "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
                                              "p, li { white-space: pre-wrap; }\n"

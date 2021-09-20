@@ -185,6 +185,9 @@ class Server(object):
         client_name: str = ""
         my_deque = deque()
         logging.debug('start while loop to serve client')
+        incoming_thread = None
+        incoming_thread_stop = True
+
         while serve_client:
             try:
                 client_msg_size = client.recv(5)
@@ -222,6 +225,9 @@ class Server(object):
                             logging.debug(f"creating 2 dicts for {user_id}")
                             self.clients[user_id] = (client, threading.Lock())
                             self.secrets[user_id] = secret
+                            incoming_thread_stop = False
+                            incoming_thread = threading.Thread(target=self.client_incoming_thread,
+                                                               args=[client_name])
                         client_name = user_id
                         logging.debug(f"thread of {client_name}!")
 
@@ -244,40 +250,8 @@ class Server(object):
                     response = {"Action": "EXIT"}
                     Server.send(response, client, secret)
 
-                my_deque.append("stop")
+                my_deque.append("end")
 
-                # FIXME: make this a thread?
-                dequed_value = my_deque.popleft()
-
-                while dequed_value != "stop":
-                    logging.debug(f"dequed data is {dequed_value}")
-                    data = dequed_value['Data']
-                    target = data['target']
-                    text = data['text']
-                    logging.debug(f"reciver is {target}")
-                    # NOTE: must be in dict
-
-                    if target in self.clients:
-
-                        logging.debug(f"using {target} is a valid key")
-                        receiver_socket, lock = self.clients[target]
-                        not_busy = lock.acquire()  # aquire socket for sending
-
-                        if not_busy:
-                            logging.debug("client no busy, sending msg")
-                            sender_data = {'Action': 'INCOMING', 'Data': {
-                                'source': client_name, 'text': text
-                            }}
-                            target_secret = self.secrets[target]
-                            Server.send(
-                                sender_data, receiver_socket, target_secret)
-                            lock.release()  # release
-                        else:
-                            logging.debug("client busy, added to queue")
-                            my_deque.append(dequed_value)
-                    else:
-                        logging.debug(f"username {user_id} isnt a valid key")
-                    dequed_value = my_deque.popleft()
 
             except ConnectionResetError:
                 logging.debug("connection error")
@@ -289,40 +263,45 @@ class Server(object):
 
         exit(0)  # terminate thread
 
-    def client_incoming_thread(self, my_deque: deque, client_name: str):
-        my_deque.append("stop")
-
-        dequed_value = my_deque.popleft()
-
-        while dequed_value != "stop":
-            logging.debug(f"dequed data is {dequed_value}")
-            data = dequed_value['Data']
-            target = data['target']
-            text = data['text']
-            logging.debug(f"reciver is {target}")
-            # NOTE: must be in dict
-
-            if target in self.clients:
-
-                logging.debug(f"using {target} is a valid key")
-                receiver_socket, lock = self.clients[target]
-                not_busy = lock.acquire()  # aquire socket for sending
-
-                if not_busy:
-                    logging.debug("client no busy, sending msg")
-                    sender_data = {'Action': 'INCOMING', 'Data': {
-                        'source': client_name, 'text': text
-                    }}
-                    target_secret = self.secrets[target]
-                    Server.send(
-                        sender_data, receiver_socket, target_secret)
-                    lock.release()  # release
-                else:
-                    logging.debug("client busy, added to queue")
-                    my_deque.append(dequed_value)
-            else:
-                pass
+    def client_incoming_thread(self, my_deque: deque, client_name: str,
+                               lock: threading.Lock):
+        """
+            run the thread until lock is set to aquire from the outside,
+            NOTE: wont be terminated if wating for something
+        """
+        while lock.acquire(False):
+            my_deque.append("stop")
             dequed_value = my_deque.popleft()
+            while dequed_value != "stop":
+                logging.debug(f"dequed data is {dequed_value}")
+                data = dequed_value['Data']
+                target = data['target']
+                text = data['text']
+                logging.debug(f"reciver is {target}")
+                # NOTE: must be in dict
+
+                if target in self.clients:
+
+                    logging.debug(f"using {target} is a valid key")
+                    receiver_socket, lock = self.clients[target]
+                    not_busy = lock.acquire()  # aquire socket for sending
+
+                    if not_busy:
+                        logging.debug("client no busy, sending msg")
+                        sender_data = {'Action': 'INCOMING', 'Data': {
+                            'source': client_name, 'text': text
+                        }}
+                        target_secret = self.secrets[target]
+                        Server.send(
+                            sender_data, receiver_socket, target_secret)
+                        lock.release()  # release
+                    else:
+                        logging.debug("client busy, added to queue")
+                        my_deque.append(dequed_value)
+                else:
+                    pass
+                dequed_value = my_deque.popleft()
+                sleep(0.05)
 
     def handle_signup(self, user_id: str, password: str) -> bool:
         """

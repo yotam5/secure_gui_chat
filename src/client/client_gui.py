@@ -161,7 +161,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         text = self.text_to_send.toPlainText()
         user_id_receiver = self.comboBox.currentText()
         logging.debug(
-            f"{self.client_inner.get_username()} sending to {user_id_receiver}")
+            f"{self.client_inner.get_username()} to {user_id_receiver}")
         if self.is_valid_conversation(user_id_receiver):
             self.message_to(text)
             data = {'Action': 'PASS_TO', 'Data': {
