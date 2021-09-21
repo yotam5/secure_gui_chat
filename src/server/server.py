@@ -211,9 +211,10 @@ class Server(object):
                     user_password = login_info['password']
 
                     if client_action == 'SIGN_UP':
-                        signup_result = self.handle_signup(
+                        self.handle_signup(
                             user_id, user_password)
-                        client.send(msgpack.dumps(signup_result))
+                        logged = self.handle_login(user_id, user_password)
+                        client.send(msgpack.dumps(logged))
 
                     else:  # login
                         logging.debug("client trying to login")
@@ -231,7 +232,7 @@ class Server(object):
                                 args=[my_deque, user_id,
                                       incoming_thread_stop])
                             incoming_thread.start()
-                        client_name = user_id
+                            client_name = user_id
                         logging.debug(f"thread of {client_name}!")
 
                 elif client_action == 'PASS_TO':
@@ -252,6 +253,9 @@ class Server(object):
                     logging.debug("client exiting action called")
                     response = {"Action": "EXIT"}
                     Server.send(response, client, secret)
+
+                elif client_action == "CREATE_GROUP":
+                    pass
 
             except ConnectionResetError:
                 logging.debug("connection error")
@@ -274,7 +278,7 @@ class Server(object):
             my_deque.append("stop")
             dequed_value = my_deque.popleft()
             while dequed_value != "stop":
-                print(f"deq val {dequed_value}")
+                logging.debug(f"deq val {dequed_value}")
                 logging.debug(f"dequed data is {dequed_value}")
                 data = dequed_value['Data']
                 target = data['target']
@@ -306,7 +310,7 @@ class Server(object):
                     logging.debug(f"no {target} in self.clients")
                 dequed_value = my_deque.popleft()
                 sleep(0.05)
-        exit(0) 
+        exit(0)
 
     def handle_signup(self, user_id: str, password: str) -> bool:
         """

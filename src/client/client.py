@@ -174,6 +174,8 @@ class Client(object):
             "user_id": self.user_id, "password": password}}
         self.send(data)
         answer = self.client_socket.recv(1024)
+        if answer:
+            self.login(password)  # NOTE
         return msgpack.loads(answer)
 
     def send(self, data: dict):  # need thread ?

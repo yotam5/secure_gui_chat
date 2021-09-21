@@ -58,15 +58,17 @@ class DataBaseManager(object):
             f"UPDATE users_data SET online='0' WHERE id='{user_id}'")
         self.__conn.commit()
 
-    def is_exist(self, user_id, selection="*"):
+    def is_exist(self, key, table: str = "users_data", selection: str = "*"):
         """
-            return the data of user_id, if user doesnt exist return None
+            return the data of name(group or user), if doesnt exist return None
         """
         try:
             result = self.__cursor.execute(
-                f"SELECT {selection} FROM users_data WHERE id LIKE '{user_id}'")
+                f"SELECT {selection} FROM users_data WHERE id LIKE '{key}'"
+            )
         except Exception:
             return None
+
         return result.fetchone()
 
     def login(self, user_id: str, password: str) -> bool:
@@ -112,9 +114,8 @@ class DataBaseManager(object):
         logging.debug("the database now is closing using __del__")
         self.close()
 
-    def add_group(self, group_name: str, group_list: list):
+    def add_group(self, group_name: str, group_admin: str, group_list: list):
         """ add group to the database """
-        pass
 
     def remove_group(self, group_name: str):
         """ remove group from the database """

@@ -1,4 +1,4 @@
-
+import logging
 from PySide2.QtCore import (
     Slot,
     Signal,
@@ -6,6 +6,7 @@ from PySide2.QtCore import (
     QRunnable,
 )
 
+logging.basicConfig(level=logging.DEBUG)
 
 class WorkerKilledException(Exception):
     pass
@@ -71,9 +72,11 @@ class Worker(QRunnable):
             result = self.fn(*self.args, **self.kwargs)
         except TypeError:
             result = self.fn()
-
-        self.signals.result.emit(result)  # Return the result of the processing
-        self.signals.finished.emit()  # disconnected
+        try:
+            self.signals.result.emit(result)  # Return the result of the processing
+            self.signals.finished.emit()  # disconnected
+        except RuntimeError:
+            logging.debug("run time error")
 
     def kill(self):
         self.is_killed = True

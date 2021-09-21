@@ -37,7 +37,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.user_search_line.returnPressed.connect(self.user_search_key_event)
-
+        
         self.login_btn.clicked.connect(
             partial(self.login_signup_to_server, self.login_btn,
                     partial(self.switch_to_page_2)))
