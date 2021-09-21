@@ -202,6 +202,8 @@ class Client(object):
             logging.debug(f"recv thread got {data}")
             data = AESCipher.decrypt_data_from_bytes(data, self.__aes256key)
             if data["Action"] not in self.my_supported_actions:
+                ac = data["Action"]
+                logging.debug(f"unsupported action {ac}")
                 self.__external_deque.append(data)
             else:
                 self.__internal_deque.append(data)

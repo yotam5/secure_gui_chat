@@ -186,15 +186,15 @@ class Server(object):
         my_deque = deque()
         logging.debug('start while loop to serve client')
         incoming_thread = None
-        incoming_thread_stop = True
+        incoming_thread_stop = threading.Lock()
 
         while serve_client:
             try:
                 client_msg_size = client.recv(5)
                 if len(client_msg_size) != 5:
                     logging.debug(f"unvalid msg len {len(client_msg_size)}")
-                    continue  # ignore, unvalid size
-
+                    serve_client = False
+                    continue
                 logging.debug(f"size of msg {client_msg_size}")
                 client_msg_size = int(msgpack.loads(client_msg_size))
                 client_data = client.recv(client_msg_size)
@@ -225,9 +225,12 @@ class Server(object):
                             logging.debug(f"creating 2 dicts for {user_id}")
                             self.clients[user_id] = (client, threading.Lock())
                             self.secrets[user_id] = secret
-                            incoming_thread_stop = False
-                            incoming_thread = threading.Thread(target=self.client_incoming_thread,
-                                                               args=[client_name])
+                            incoming_thread_stop.acquire()
+                            incoming_thread = threading.Thread(
+                                target=self.client_incoming_thread,
+                                args=[my_deque, user_id,
+                                      incoming_thread_stop])
+                            incoming_thread.start()
                         client_name = user_id
                         logging.debug(f"thread of {client_name}!")
 
@@ -250,17 +253,15 @@ class Server(object):
                     response = {"Action": "EXIT"}
                     Server.send(response, client, secret)
 
-                my_deque.append("end")
-
-
             except ConnectionResetError:
                 logging.debug("connection error")
                 serve_client = False
             sleep(0.05)
+
         if client_name:
             self.database_manager.logout(client_name)
         logging.debug("client disconnected")
-
+        incoming_thread_stop.release()
         exit(0)  # terminate thread
 
     def client_incoming_thread(self, my_deque: deque, client_name: str,
@@ -269,10 +270,11 @@ class Server(object):
             run the thread until lock is set to aquire from the outside,
             NOTE: wont be terminated if wating for something
         """
-        while lock.acquire(False):
+        while not lock.acquire(False):
             my_deque.append("stop")
             dequed_value = my_deque.popleft()
             while dequed_value != "stop":
+                print(f"deq val {dequed_value}")
                 logging.debug(f"dequed data is {dequed_value}")
                 data = dequed_value['Data']
                 target = data['target']
@@ -292,16 +294,19 @@ class Server(object):
                             'source': client_name, 'text': text
                         }}
                         target_secret = self.secrets[target]
+                        logging.debug("sending msg")
                         Server.send(
                             sender_data, receiver_socket, target_secret)
+                        logging.debug("msg sent")
                         lock.release()  # release
                     else:
                         logging.debug("client busy, added to queue")
                         my_deque.append(dequed_value)
                 else:
-                    pass
+                    logging.debug(f"no {target} in self.clients")
                 dequed_value = my_deque.popleft()
                 sleep(0.05)
+        exit(0) 
 
     def handle_signup(self, user_id: str, password: str) -> bool:
         """

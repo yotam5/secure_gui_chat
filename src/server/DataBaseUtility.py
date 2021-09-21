@@ -1,5 +1,6 @@
 import sqlite3
 import logging
+import msgpack
 from src.utilities import hash_utility
 
 
@@ -61,8 +62,11 @@ class DataBaseManager(object):
         """
             return the data of user_id, if user doesnt exist return None
         """
-        result = self.__cursor.execute(
-            f"SELECT {selection} FROM users_data WHERE id LIKE '{user_id}'")
+        try:
+            result = self.__cursor.execute(
+                f"SELECT {selection} FROM users_data WHERE id LIKE '{user_id}'")
+        except Exception:
+            return None
         return result.fetchone()
 
     def login(self, user_id: str, password: str) -> bool:
@@ -107,6 +111,14 @@ class DataBaseManager(object):
     def _del_(self):
         logging.debug("the database now is closing using __del__")
         self.close()
+
+    def add_group(self, group_name: str, group_list: list):
+        """ add group to the database """
+        pass
+
+    def remove_group(self, group_name: str):
+        """ remove group from the database """
+        pass
 
 
 if __name__ == '__main__':
