@@ -297,13 +297,14 @@ color: rgb(7,11,55);
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>140</y>
-        <width>241</width>
+        <y>120</y>
+        <width>251</width>
         <height>51</height>
        </rect>
       </property>
       <property name="styleSheet">
        <string notr="true">border: 3px light green; 
+font: 12pt &quot;mononoki&quot;;
                   background-color: rgba(0, 255, 255, 50);
 border-radius: 10px;</string>
       </property>
@@ -322,6 +323,7 @@ border-radius: 10px;</string>
       </property>
       <property name="styleSheet">
        <string notr="true">border: 3px light green; 
+font: 12pt &quot;mononoki&quot;;
 background-color: rgba(0, 255, 255, 50);                 
 border-radius: 10px;</string>
       </property>
@@ -331,22 +333,23 @@ border-radius: 10px;</string>
        </property>
       </item>
      </widget>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="group_editor_btn">
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>240</y>
+        <y>220</y>
         <width>241</width>
         <height>51</height>
        </rect>
       </property>
       <property name="styleSheet">
        <string notr="true">border: 3px light green; 
+font: 12pt &quot;mononoki&quot;;
                   background-color: rgba(0, 255, 255, 50);
 border-radius: 10px;</string>
       </property>
       <property name="text">
-       <string>chat group editor</string>
+       <string>move to group editor</string>
       </property>
      </widget>
     </widget>
@@ -413,8 +416,8 @@ font: 9pt &quot;mononoki&quot;;</string>
      <widget class="QLabel" name="action_center">
       <property name="geometry">
        <rect>
-        <x>740</x>
-        <y>40</y>
+        <x>760</x>
+        <y>30</y>
         <width>171</width>
         <height>20</height>
        </rect>
@@ -427,64 +430,11 @@ font: 9pt &quot;mononoki&quot;;</string>
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Action Center&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
-     <widget class="QStackedWidget" name="group_stack">
+     <widget class="QPushButton" name="apply_group_editor">
       <property name="geometry">
        <rect>
-        <x>410</x>
-        <y>70</y>
-        <width>431</width>
-        <height>461</height>
-       </rect>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">                  background-color: rgba(0, 255, 255, 0);
-</string>
-      </property>
-      <widget class="QWidget" name="create">
-       <widget class="QLineEdit" name="group_name">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>10</y>
-          <width>171</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">border: 3px light green; 
-                  background-color: rgba(0, 255, 255, 100);
-border-radius: 10px;</string>
-        </property>
-        <property name="placeholderText">
-         <string>Group Name:</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="add_member">
-        <property name="geometry">
-         <rect>
-          <x>150</x>
-          <y>100</y>
-          <width>171</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">border: 3px light green; 
-                  background-color: rgba(0, 255, 255, 100);
-border-radius: 10px;</string>
-        </property>
-        <property name="placeholderText">
-         <string>Add Member:</string>
-        </property>
-       </widget>
-      </widget>
-      <widget class="QWidget" name="edit"/>
-     </widget>
-     <widget class="QPushButton" name="apply">
-      <property name="geometry">
-       <rect>
-        <x>910</x>
-        <y>70</y>
+        <x>450</x>
+        <y>590</y>
         <width>201</width>
         <height>81</height>
        </rect>
@@ -498,11 +448,11 @@ font: 14pt &quot;mononoki&quot;;
        <string>Apply</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="pushButton_3">
+     <widget class="QPushButton" name="Exit_group_editor">
       <property name="geometry">
        <rect>
-        <x>910</x>
-        <y>180</y>
+        <x>730</x>
+        <y>590</y>
         <width>201</width>
         <height>81</height>
        </rect>
@@ -515,6 +465,131 @@ font: 14pt &quot;mononoki&quot;;
       <property name="text">
        <string>Exit</string>
       </property>
+     </widget>
+     <widget class="QStackedWidget" name="group_common_stack">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>80</y>
+        <width>331</width>
+        <height>321</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgba(255, 255, 255,0);</string>
+      </property>
+      <widget class="QWidget" name="group_common">
+       <widget class="QLineEdit" name="group_remove_member">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>230</y>
+          <width>291</width>
+          <height>71</height>
+         </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border: 3px light green; 
+font: 14pt &quot;mononoki&quot;;
+                  background-color: rgba(0, 255, 255, 100);
+border-radius: 10px;</string>
+        </property>
+        <property name="placeholderText">
+         <string>Remove Member:</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="group_add_member">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>130</y>
+          <width>291</width>
+          <height>71</height>
+         </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border: 3px light green; 
+font: 14pt &quot;mononoki&quot;;
+                  background-color: rgba(0, 255, 255, 100);
+border-radius: 10px;</string>
+        </property>
+        <property name="placeholderText">
+         <string>Add Member:</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="group_name">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>30</y>
+          <width>291</width>
+          <height>71</height>
+         </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border: 3px light green; 
+font: 14pt &quot;mononoki&quot;;
+                  background-color: rgba(0, 255, 255, 100);
+border-radius: 10px;</string>
+        </property>
+        <property name="placeholderText">
+         <string>Group Name:</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="group_common_empty"/>
+     </widget>
+     <widget class="QStackedWidget" name="group_action_stack">
+      <property name="geometry">
+       <rect>
+        <x>840</x>
+        <y>70</y>
+        <width>251</width>
+        <height>291</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgba(255, 255, 255,0);</string>
+      </property>
+      <widget class="QWidget" name="select_group_action">
+       <widget class="QPushButton" name="create_group_btn">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>30</y>
+          <width>201</width>
+          <height>81</height>
+         </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgba(180,255, 255, 90);
+font: 14pt &quot;mononoki&quot;;
+ border-radius: 10px;</string>
+        </property>
+        <property name="text">
+         <string>Create Group</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="edit_group_btn">
+        <property name="geometry">
+         <rect>
+          <x>30</x>
+          <y>160</y>
+          <width>201</width>
+          <height>81</height>
+         </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgba(180,255, 255, 90);
+font: 14pt &quot;mononoki&quot;;
+ border-radius: 10px;</string>
+        </property>
+        <property name="text">
+         <string>Edit Group</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="empty_group_selection"/>
      </widget>
     </widget>
    </widget>

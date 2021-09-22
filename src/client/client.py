@@ -10,13 +10,13 @@ import threading
 # my own
 from src.utilities import rsa_utility
 from src.utilities import AESCipher
+from src.utilities.config_utility import network_configuration_loader
 
 # dependencies
 import msgpack
 import pyDH
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey.RSA import importKey
-from src.utilities.config_utility import network_configuration_loader
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -178,12 +178,13 @@ class Client(object):
             self.login(password)  # NOTE
         return msgpack.loads(answer)
 
-    def send(self, data: dict):  # need thread ?
+    def send(self, data: dict, none_blocking=True) -> bool:
         # encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         header = Client.send_header(data)
         try:
             self.client_socket.send(header + data)
+            logging.debug("sent data to server")
         except Exception as e:
             logging.debug(f"error in send {e}")
 

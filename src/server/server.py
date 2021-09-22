@@ -236,6 +236,7 @@ class Server(object):
                         logging.debug(f"thread of {client_name}!")
 
                 elif client_action == 'PASS_TO':
+                    logging.debug("add action PASS_TO to the queue")
                     my_deque.append(client_data)
 
                 elif client_action == 'SEARCH':
@@ -269,12 +270,12 @@ class Server(object):
         exit(0)  # terminate thread
 
     def client_incoming_thread(self, my_deque: deque, client_name: str,
-                               lock: threading.Lock):
+                               stop_running: threading.Lock):
         """
             run the thread until lock is set to aquire from the outside,
             NOTE: wont be terminated if wating for something
         """
-        while not lock.acquire(False):
+        while not stop_running.acquire(False):
             my_deque.append("stop")
             dequed_value = my_deque.popleft()
             while dequed_value != "stop":
@@ -310,6 +311,7 @@ class Server(object):
                     logging.debug(f"no {target} in self.clients")
                 dequed_value = my_deque.popleft()
                 sleep(0.05)
+        logging.debug("client incoming thread has beed exited")
         exit(0)
 
     def handle_signup(self, user_id: str, password: str) -> bool:

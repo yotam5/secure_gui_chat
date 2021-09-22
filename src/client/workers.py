@@ -8,6 +8,7 @@ from PySide2.QtCore import (
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 class WorkerKilledException(Exception):
     pass
 
@@ -73,10 +74,11 @@ class Worker(QRunnable):
         except TypeError:
             result = self.fn()
         try:
-            self.signals.result.emit(result)  # Return the result of the processing
+            # Return the result of the processing
+            self.signals.result.emit(result)
             self.signals.finished.emit()  # disconnected
-        except RuntimeError:
-            logging.debug("run time error")
+        except RuntimeError as e:
+            logging.debug(e)
 
     def kill(self):
         self.is_killed = True

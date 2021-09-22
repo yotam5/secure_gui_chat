@@ -1,6 +1,6 @@
 import sqlite3
 import logging
-import msgpack
+# import msgpack
 from src.utilities import hash_utility
 
 

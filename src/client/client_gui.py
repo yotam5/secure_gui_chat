@@ -37,7 +37,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.user_search_line.returnPressed.connect(self.user_search_key_event)
-        
+
         self.login_btn.clicked.connect(
             partial(self.login_signup_to_server, self.login_btn,
                     partial(self.switch_to_page_2)))
@@ -51,6 +51,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.comboBox.view().pressed.connect(
             self.comboBoxEvent)
 
+        self.group_editor_btn.clicked.connect(self.switch_to_page_3)
+
+        self.create_group_btn.clicked.connect(
+            self.show_group_creator_stack)
+
         self.client_inner = Client()
         self.connected_to_server = False
         self.talkingto = ""
@@ -59,11 +64,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.thread_pool = QThreadPool()
         self.thread_funcs = [self.handle_external_queue]
         self.workers = []
-        self.   external_queue_worker = Worker(self.handle_external_queue)
+        self.external_queue_worker = Worker(self.handle_external_queue)
         self.external_queue_worker.signals.progress.connect(self.message_from)
         self.workers.append(self.external_queue_worker)
         # self.external_queue_worker.signals.progress.connect(self.message_from)
         self.running = True
+        self.valid_conversation = False
         self.chat = QListView(self.page_2)
         self.chat.setObjectName("chat")
         self.chat.setGeometry(QRect(480, 20, 771, 581))
@@ -85,10 +91,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         selected = self.comboBox.currentText()
         if self.is_valid_conversation(selected):
+            logging.debug("valid conversation")
             logging.debug(f"talking to {selected}")
             self.talkingto = selected
+            self.valid_conversation = True
         else:
             logging.debug(f"unvalid, {selected}")
+            self.valid_conversation = False
 
     def is_valid_conversation(self, user_id: str) -> bool:
         unvalid = [self.comboBox.placeholderText(
@@ -162,25 +171,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         user_id_receiver = self.comboBox.currentText()
         logging.debug(
             f"{self.client_inner.get_username()} to {user_id_receiver}")
-        if self.is_valid_conversation(user_id_receiver):
+        if self.valid_conversation:
             self.message_to(text)
             data = {'Action': 'PASS_TO', 'Data': {
                 'target': user_id_receiver, 'text': text}}
             self.text_to_send.setText('')
             self.client_inner.send(data)
 
-    def switch_to_page_2(self, function=False):
-        # if function and function():
-        # chat screen
+    def switch_to_page_2(self):
+        """ switch to chat page """
         self.stackedWidget.setCurrentWidget(self.page_2)
 
     def switch_to_page_1(self):
-        # login page
+        """ switch to login page """
         self.stackedWidget.setCurrentWidget(self.page_1)
 
     def switch_to_page_3(self):
-        # group creator/ appender screen?
-        pass
+        """ switch to group editor page """
+        self.stackedWidget.setCurrentWidget(self.page_3)
+        self.group_common_stack.setCurrentWidget(self.group_common_empty)
+        self.group_action_stack.setCurrentWidget(self.select_group_action)
+
+    def show_group_creator_stack(self):
+        """ change page 3 stacks for group creating """
+        self.group_action_stack.setCurrentWidget(self.empty_group_selection)
+        self.repaint()
+        sleep(0.05)
+        self.group_common_stack.setCurrentWidget(self.group_common)
 
     def handle_external_queue(self, progress_callback):
         logging.debug("handle external queue")
@@ -205,6 +222,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("exiting thread in client_gui")
 
     def closeEvent(self, event):
+        """
+            close the application when exit clicked
+        """
         event.accept()
         logging.debug("the ui is being closed")
         self.running = False
