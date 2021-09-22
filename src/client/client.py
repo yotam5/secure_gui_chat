@@ -25,16 +25,6 @@ logging.basicConfig(level=logging.DEBUG)
 # NOTE: to add 2 FA with email or etc
 # NOTE: to check auth using server perment pem
 
-"""
-    FIXME:
-        i need to create one thread for receving and one for sending,
-        ill have queue for the receved and the data that needs to be sent
-        and also ill send the msg size before the message itself,
-        that will fix the problem of different sends and received at
-        the same time,
-"""
-
-
 class Client(object):
     def __init__(self, user_id: str = "DUMMY"):
         self.localhost: str = None
@@ -56,7 +46,13 @@ class Client(object):
         self.__external_deque = deque()
         self.my_supported_actions = [""]
         self.run_recv_thread = False
-        self.recv_thread_obj = None
+        self.recv_thread_obj = self.recv_thread_obj = threading.Thread(
+            target=self.recv_thread, args=[])
+        self.rec_thread_exit = True
+        self.run_sending_thread = False
+        self.sending_thread_obj = self.sending_thread = threading.Thread(
+            target=self.sending_thread, args=[])
+        self.send_thread_exit = True  # forcefully close?
 
     def load_keys(self):
         """
@@ -160,8 +156,6 @@ class Client(object):
         if response:
             logging.debug("initiating recv thread in client inner")
             self.run_recv_thread = True
-            self.recv_thread_obj = threading.Thread(
-                target=self.recv_thread, args=[])
             self.recv_thread_obj.start()
 
         return response
@@ -178,18 +172,26 @@ class Client(object):
             self.login(password)  # NOTE
         return msgpack.loads(answer)
 
-    def send(self, data: dict, none_blocking=True) -> bool:
-        # encrypted_data = AESCipher.encrypt_data_to_bytes(text, )
+    def send(self, data: dict, none_blocking=False):
+        """
+            send data to server encrypted and with header of size
+        """
         data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
-        header = Client.send_header(data)
-        try:
-            self.client_socket.send(header + data)
-            logging.debug("sent data to server")
-        except Exception as e:
-            logging.debug(f"error in send {e}")
+        if none_blocking:
+            self.__internal_deque.append(data)
+        else:
+            header = Client.send_header(data)
+            try:
+                self.client_socket.send(header + data)
+                logging.debug("sent data to server")
+            except Exception as e:
+                logging.debug(f"error in send {e}")
 
     def recv_thread(self):
-        self.thread_exit = False
+        """
+            thread that recives messages
+        """
+        self.rec_thread_exit = False  # NOTE: change to recv exit
         logging.debug("recv_thread called inner client")
         while self.run_recv_thread:
             try:
@@ -203,6 +205,7 @@ class Client(object):
             data_size = int(msgpack.loads(data_size))
             data = self.client_socket.recv(data_size)
             logging.debug(f"recv thread got {data}")
+            # NOTE: move to a separated thread? the decrypt and handling? nah
             data = AESCipher.decrypt_data_from_bytes(data, self.__aes256key)
             if data["Action"] not in self.my_supported_actions:
                 ac = data["Action"]
@@ -211,12 +214,19 @@ class Client(object):
             else:
                 self.__internal_deque.append(data)
             sleep(0.05)
-        self.thread_exit = True
+        self.rec_thread_exit = True
         logging.debug("exiting recv threading in client inner")
         exit(0)
 
-    def run(self):  # NOTE: need to add thread for sending/reciving
-        pass
+    def sending_thread(self):
+        """
+            thread that sends messages
+        """
+        while self.run_sending_thread:
+            while self.__internal_deque:
+                pass
+            sleep(0.05)
+        exit(0)
 
     def is_online(self, user_id: str):
         """
@@ -243,21 +253,36 @@ class Client(object):
     def get_username(self) -> str:
         return self.user_id
 
+    def handle_internal_queue(self):
+        """
+            action that the client socket need to handle
+        """
+        pass
+
     def get_external_queue_task(self):
+        """
+            actions that the gui need to handle
+        """
         if self.__external_deque:
             return self.__external_deque.popleft()
         return None
 
     def close(self):
+        """
+            close the connection
+        """
         self.run_recv_thread = False
         data = {'Action': 'EXIT'}
         self.send(data)
-        while not self.thread_exit:
+        while not self.rec_thread_exit:
             continue
         self.client_socket.close()
 
     @staticmethod
     def send_header(data: bytes) -> bytes:
+        """
+            return the msg size header
+        """
         header = str(len(data)).zfill(4)
         return msgpack.dumps(header)
 

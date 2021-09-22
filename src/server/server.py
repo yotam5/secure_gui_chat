@@ -276,9 +276,8 @@ class Server(object):
             NOTE: wont be terminated if wating for something
         """
         while not stop_running.acquire(False):
-            my_deque.append("stop")
-            dequed_value = my_deque.popleft()
-            while dequed_value != "stop":
+            while my_deque:
+                dequed_value = my_deque.popleft()
                 logging.debug(f"deq val {dequed_value}")
                 logging.debug(f"dequed data is {dequed_value}")
                 data = dequed_value['Data']
@@ -309,7 +308,6 @@ class Server(object):
                         my_deque.append(dequed_value)
                 else:
                     logging.debug(f"no {target} in self.clients")
-                dequed_value = my_deque.popleft()
                 sleep(0.05)
         logging.debug("client incoming thread has beed exited")
         exit(0)

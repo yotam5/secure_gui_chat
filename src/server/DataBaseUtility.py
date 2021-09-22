@@ -2,8 +2,7 @@ import sqlite3
 import logging
 # import msgpack
 from src.utilities import hash_utility
-
-
+from threading import Lock
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -16,6 +15,7 @@ class DataBaseManager(object):
         self.__conn = sqlite3.connect(filename, check_same_thread=False)
         self.__cursor = self.__conn.cursor()
         self.__cursor.row_factory = sqlite3.Row  # to be able to retrive a dict
+        self.__thread_lock = Lock()
 
     def add_user(self, user_id: str, hashed_password: bytes,
                  salt: bytes, pubkey=b'', status=0):
@@ -53,10 +53,13 @@ class DataBaseManager(object):
         return False
 
     def logout(self, user_id: str):  # set online to 0
+
+        self.__thread_lock.acquire()  # wait till acquired lock, race cond
         logging.debug(f"client {user_id} is logging out")
         self.__cursor.execute(
             f"UPDATE users_data SET online='0' WHERE id='{user_id}'")
         self.__conn.commit()
+        self.__thread_lock.release()
 
     def is_exist(self, key, table: str = "users_data", selection: str = "*"):
         """

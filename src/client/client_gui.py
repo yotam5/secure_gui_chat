@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 """
     TODO:
+        --in the client make "send" non blocking?
         need to add group creator window switchted from
         the chat window
         needed functionality:
@@ -55,6 +56,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.create_group_btn.clicked.connect(
             self.show_group_creator_stack)
+        
+        self.group_add_member.returnPressed.connect(self.add_member)
 
         self.client_inner = Client()
         self.connected_to_server = False
@@ -234,12 +237,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pass
 
     def resizeEvent(self, e):
+        """
+            window resize?
+        """
         self.model.layoutChanged.emit()
 
+    def add_member(self):
+        member_to_add = self.group_add_member.text()
+        #self.in
+        pass
+
     def message_to(self, text: str):
+        """
+            display str as msg to someone
+        """
         self.model.add_message(bubble.USER_ME, text)
 
     def message_from(self, text: str):
+        """
+            display str as msg from someone
+        """
         self.model.add_message(bubble.USER_THEM, text)
 
 
