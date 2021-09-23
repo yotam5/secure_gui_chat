@@ -50,7 +50,7 @@ class Client(object):
             target=self.recv_thread, args=[])
         self.rec_thread_exit = True
         self.run_sending_thread = False
-        self.sending_thread_obj = self.sending_thread = threading.Thread(
+        self.sending_thread_obj = threading.Thread(
             target=self.sending_thread, args=[])
         self.send_thread_exit = True  # forcefully close?
 
@@ -157,7 +157,8 @@ class Client(object):
             logging.debug("initiating recv thread in client inner")
             self.run_recv_thread = True
             self.recv_thread_obj.start()
-
+            self.run_sending_thread = True
+            self.sending_thread_obj.start()
         return response
 
     def sign_up(self, password: str) -> bool:  # this not need thread
@@ -176,10 +177,10 @@ class Client(object):
         """
             send data to server encrypted and with header of size
         """
-        data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
         if none_blocking:
             self.__internal_deque.append(data)
         else:
+            data = AESCipher.encrypt_data_to_bytes(data, self.__aes256key)
             header = Client.send_header(data)
             try:
                 self.client_socket.send(header + data)
@@ -224,7 +225,11 @@ class Client(object):
         """
         while self.run_sending_thread:
             while self.__internal_deque:
-                pass
+                data_to_send = self.__internal_deque.popleft()
+                logging.debug("sending data")
+                self.send(data_to_send, none_blocking=False)
+                logging.debug("data sent")
+                sleep(0.05)
             sleep(0.05)
         exit(0)
 
@@ -272,6 +277,7 @@ class Client(object):
             close the connection
         """
         self.run_recv_thread = False
+        self.run_sending_thread = False
         data = {'Action': 'EXIT'}
         self.send(data)
         while not self.rec_thread_exit:

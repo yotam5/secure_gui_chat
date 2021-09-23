@@ -56,7 +56,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.create_group_btn.clicked.connect(
             self.show_group_creator_stack)
-        
+
         self.group_add_member.returnPressed.connect(self.add_member)
 
         self.client_inner = Client()
@@ -179,7 +179,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             data = {'Action': 'PASS_TO', 'Data': {
                 'target': user_id_receiver, 'text': text}}
             self.text_to_send.setText('')
-            self.client_inner.send(data)
+            self.client_inner.send(data, none_blocking=True)
 
     def switch_to_page_2(self):
         """ switch to chat page """
@@ -244,7 +244,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def add_member(self):
         member_to_add = self.group_add_member.text()
-        #self.in
+
         pass
 
     def message_to(self, text: str):
