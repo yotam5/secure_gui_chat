@@ -270,4 +270,19 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
+    ui.chat = QtWidgets.QListView(ui.page_2)
+    ui.chat.setObjectName("chat")
+    ui.chat.setGeometry(QtCore.QRect(480, 20, 771, 581))
+    ui.chat.setMinimumSize(QtCore.QSize(10, 10))
+    ui.chat.setStyleSheet(
+        "border: 3px light green; \n"
+        "                  background-color: rgba(0, 255, 255, 90);\n"
+        "border-radius: 10px;"
+    )
+    ui.chat.setResizeMode(QtWidgets.QListView.Adjust)
+    ui.chat.setItemDelegate(bubble.MessageDelegate())
+    ui.model = bubble.MessageModel()
+    ui.chat.setModel(ui.model)
+    ui.stackedWidget.setCurrentWidget(ui.page_2)
+
     sys.exit(app.exec_())

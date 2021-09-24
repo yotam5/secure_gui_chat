@@ -26,6 +26,7 @@ from src.utilities import hash_utility
 from src.utilities.config_utility import network_configuration_loader
 
 """
+    NOTE: sending in a thread??
     TODO:
         LOGIN:
             !verification that client talks to server, by having the client
@@ -250,6 +251,17 @@ class Server(object):
                     logging.debug("sending SEARCH result")
                     Server.send(response, client, secret)
 
+                elif client_action == 'ADD_MEMBER':
+                    data = client_data['Data']
+                    member_name = data['user_id']
+                    logging.debug("client wants to add member")
+                    member_exist = self.database_manager.is_exist(member_name)
+                    if member_exist:
+                        response = {'Action': 'ADD_MEMBER',
+                                    'Data': {'user_exist': bool(member_exist),
+                                            'user_id': member_name}}
+                        Server.send(response, client, secret)
+
                 elif client_action == "EXIT":
                     logging.debug("client exiting action called")
                     response = {"Action": "EXIT"}
@@ -261,7 +273,7 @@ class Server(object):
             except ConnectionResetError:
                 logging.debug("connection error")
                 serve_client = False
-            sleep(0.05)
+            sleep(1)
 
         if client_name:
             self.database_manager.logout(client_name)
@@ -308,7 +320,7 @@ class Server(object):
                         my_deque.append(dequed_value)
                 else:
                     logging.debug(f"no {target} in self.clients")
-                sleep(0.05)
+                sleep(1)
         logging.debug("client incoming thread has beed exited")
         exit(0)
 
@@ -374,7 +386,7 @@ class Server(object):
             client_thread = threading.Thread(
                 target=self.client_handle, args=[client])
             client_thread.start()
-            sleep(0.05)
+            sleep(1)
         logging.debug("add_client is exiting")
         exit(0)
 
@@ -397,7 +409,7 @@ class Server(object):
         exit(0)
 
     @staticmethod
-    def send(data: dict, client_socket: socket.socket, aeskey: bytes):
+    def send(data: dict, client_socket: socket.socket, aeskey: bytes, block=True):
         data = AESCipher.encrypt_data_to_bytes(data, aeskey)
         header = Server.send_header(data)
         try:

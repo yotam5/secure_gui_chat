@@ -224,13 +224,12 @@ class Client(object):
             thread that sends messages
         """
         while self.run_sending_thread:
-            while self.__internal_deque:
+            sleep(0.05)
+            if self.__internal_deque:
                 data_to_send = self.__internal_deque.popleft()
                 logging.debug("sending data")
                 self.send(data_to_send, none_blocking=False)
                 logging.debug("data sent")
-                sleep(0.05)
-            sleep(0.05)
         exit(0)
 
     def is_online(self, user_id: str):
@@ -281,7 +280,7 @@ class Client(object):
         data = {'Action': 'EXIT'}
         self.send(data)
         while not self.rec_thread_exit:
-            continue
+            sleep(0.05)
         self.client_socket.close()
 
     @staticmethod

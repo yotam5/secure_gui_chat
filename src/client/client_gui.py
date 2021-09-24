@@ -7,10 +7,12 @@ from main_ui import Ui_MainWindow
 from functools import partial
 from time import sleep
 import logging
+from typing import List
+
+# mine
 from client import Client
 from workers import Worker
 import bubble
-
 logging.basicConfig(level=logging.DEBUG)
 
 """
@@ -199,7 +201,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """ change page 3 stacks for group creating """
         self.group_action_stack.setCurrentWidget(self.empty_group_selection)
         self.repaint()
-        sleep(0.05)
+        sleep(0.2)
         self.group_common_stack.setCurrentWidget(self.group_common)
 
     def handle_external_queue(self, progress_callback):
@@ -207,20 +209,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         while self.running:
             task = self.client_inner.get_external_queue_task()
             if task:
+                action = task['Action']
                 task_data = task["Data"]
-                if task["Action"] == "SEARCH":
+
+                if action == "SEARCH":
                     logging.debug("search action finished")
                     if not self.add_to_combo_box(task_data["Result"]):
                         unvalid_user = self.user_search_line.text()
                         indication_msg = f"no user'{unvalid_user}'"
                         self.user_search_line.setText(indication_msg)
 
-                elif task["Action"] == "INCOMING":
+                elif action == "INCOMING":
                     logging.debug("got message from someone")
                     logging.debug(task)
                     logging.debug(f"talking to {self.talkingto}")
                     if self.is_valid_conversation(task_data['source']):
                         progress_callback.emit(task_data["text"])
+
+                elif action == 'ADD_MEMBER':
+                    logging.debug(task)
+                    if task_data['user_exist']:
+                        member = task_data['user_id']
+                        self.members_list.addItem(member)
+
             sleep(0.05)
         logging.debug("exiting thread in client_gui")
 
@@ -243,9 +254,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.model.layoutChanged.emit()
 
     def add_member(self):
+        """
+            ask the server if member can be added(if exist)
+        """
+        # NOTE: make in outside of function, adding each time. O(n) + O(1)?
+        current_members = self.get_group_members_list()
         member_to_add = self.group_add_member.text()
+        can_be_added = True
+        for member in current_members:
+            if member_to_add == member.text():
+                can_be_added = False
+                break
+        if can_be_added:
+            action_to_send = {'Action': "ADD_MEMBER", "Data": {"user_id":
+                                                               member_to_add}}
+            self.client_inner.send(action_to_send, none_blocking=True)
 
-        pass
+    def remove_member(self):
+        # NOTE: move to thread the actions?
+        """
+            remove member from the list
+        """
+        member_to_remove = self.group_remove_member.text()
+        member_removed = False
+        for member in self.get_group_members_list(self):
+            if member.text() == member_to_remove:
+                self.members_list.takeItem(self.members_list.row(member))
+                member_removed = True
+                break
+        # NOTE: if member_removed false pop up of user not found
+
+    def get_group_members_list(self) -> List[str]:
+        current_members = [self.members_list.item(x)
+                           for x in range(self.members_list.count())]
+        return current_members
 
     def message_to(self, text: str):
         """
