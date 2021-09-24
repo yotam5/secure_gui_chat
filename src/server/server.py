@@ -190,90 +190,91 @@ class Server(object):
         incoming_thread_stop = threading.Lock()
 
         while serve_client:
+            sleep(0.05)
             try:
                 client_msg_size = client.recv(5)
                 if len(client_msg_size) != 5:
                     logging.debug(f"unvalid msg len {len(client_msg_size)}")
                     serve_client = False
                     continue
-                logging.debug(f"size of msg {client_msg_size}")
-                client_msg_size = int(msgpack.loads(client_msg_size))
-                client_data = client.recv(client_msg_size)
-                client_data = AESCipher.decrypt_data_from_bytes(
-                    client_data, secret)
-                logging.debug("handling data result")
-                logging.debug(f"got from client {client_data}")
-                # data_dict_keys = client_data.keys()
-                client_action = client_data['Action']
-
-                if client_action in ['LOGIN', 'SIGN_UP']:
-                    login_info = client_data['Data']
-                    user_id = login_info['user_id']
-                    user_password = login_info['password']
-
-                    if client_action == 'SIGN_UP':
-                        self.handle_signup(
-                            user_id, user_password)
-                        logged = self.handle_login(user_id, user_password)
-                        client.send(msgpack.dumps(logged))
-
-                    else:  # login
-                        logging.debug("client trying to login")
-                        login_result = self.handle_login(
-                            user_id, user_password)
-                        logging.debug(f"the login result is {login_result}")
-                        client.send(msgpack.dumps(login_result))
-                        if login_result:
-                            logging.debug(f"creating 2 dicts for {user_id}")
-                            self.clients[user_id] = (client, threading.Lock())
-                            self.secrets[user_id] = secret
-                            incoming_thread_stop.acquire()
-                            incoming_thread = threading.Thread(
-                                target=self.client_incoming_thread,
-                                args=[my_deque, user_id,
-                                      incoming_thread_stop])
-                            incoming_thread.start()
-                            client_name = user_id
-                        logging.debug(f"thread of {client_name}!")
-
-                elif client_action == 'PASS_TO':
-                    logging.debug("add action PASS_TO to the queue")
-                    my_deque.append(client_data)
-
-                elif client_action == 'SEARCH':
-                    data = client_data['Data']
-                    logging.debug(
-                        f"client trying to search user {data['user_id']}")
-                    result = self.database_manager.is_online(data['user_id'])
-                    response = {"Action": "SEARCH",
-                                "Data": {"Result": result}}
-
-                    logging.debug("sending SEARCH result")
-                    Server.send(response, client, secret)
-
-                elif client_action == 'ADD_MEMBER':
-                    data = client_data['Data']
-                    member_name = data['user_id']
-                    logging.debug("client wants to add member")
-                    member_exist = self.database_manager.is_exist(member_name)
-                    if member_exist:
-                        response = {'Action': 'ADD_MEMBER',
-                                    'Data': {'user_exist': bool(member_exist),
-                                            'user_id': member_name}}
-                        Server.send(response, client, secret)
-
-                elif client_action == "EXIT":
-                    logging.debug("client exiting action called")
-                    response = {"Action": "EXIT"}
-                    Server.send(response, client, secret)
-
-                elif client_action == "CREATE_GROUP":
-                    pass
-
             except ConnectionResetError:
                 logging.debug("connection error")
                 serve_client = False
-            sleep(1)
+                continue
+            logging.debug(f"size of msg {client_msg_size}")
+            client_msg_size = int(msgpack.loads(client_msg_size))
+            client_data = client.recv(client_msg_size)
+            client_data = AESCipher.decrypt_data_from_bytes(
+                client_data, secret)
+            logging.debug("handling data result")
+            logging.debug(f"got from client {client_data}")
+            client_action = client_data['Action']
+            logging.debug(f"client action is {client_action}")
+            
+            if client_action in ['LOGIN', 'SIGN_UP']:
+                login_info = client_data['Data']
+                user_id = login_info['user_id']
+                user_password = login_info['password']
+
+                if client_action == 'SIGN_UP':
+                    self.handle_signup(
+                        user_id, user_password)
+                    logged = self.handle_login(user_id, user_password)
+                    client.send(msgpack.dumps(logged))
+
+                else:  # login
+                    logging.debug("client trying to login")
+                    login_result = self.handle_login(
+                        user_id, user_password)
+                    logging.debug(f"the login result is {login_result}")
+                    client.send(msgpack.dumps(login_result))
+                    if login_result:
+                        logging.debug(f"creating 2 dicts for {user_id}")
+                        self.clients[user_id] = (client, threading.Lock())
+                        self.secrets[user_id] = secret
+                        incoming_thread_stop.acquire()
+                        incoming_thread = threading.Thread(
+                            target=self.client_incoming_thread,
+                            args=[my_deque, user_id,
+                                  incoming_thread_stop])
+                        incoming_thread.start()
+                        client_name = user_id
+                    logging.debug(f"thread of {client_name}!")
+
+            elif client_action == "CREATE_GROUP":
+                logging.debug('client applied group creation')
+
+            elif client_action == 'PASS_TO':
+                logging.debug("add action PASS_TO to the queue")
+                my_deque.append(client_data)
+
+            elif client_action == 'SEARCH':
+                data = client_data['Data']
+                logging.debug(
+                    f"client trying to search user {data['user_id']}")
+                result = self.database_manager.is_online(data['user_id'])
+                response = {"Action": "SEARCH",
+                            "Data": {"Result": result}}
+
+                logging.debug("sending SEARCH result")
+                Server.send(response, client, secret)
+
+            elif client_action == 'ADD_MEMBER':
+                data = client_data['Data']
+                member_name = data['user_id']
+                logging.debug("client wants to add member")
+                member_exist = self.database_manager.is_exist(member_name)
+                if member_exist:
+                    response = {'Action': 'ADD_MEMBER',
+                                'Data': {'user_exist': bool(member_exist),
+                                         'user_id': member_name}}
+                    Server.send(response, client, secret)
+
+            elif client_action == "EXIT":
+                logging.debug("client exiting action called")
+                response = {"Action": "EXIT"}
+                Server.send(response, client, secret)
+
 
         if client_name:
             self.database_manager.logout(client_name)
@@ -320,7 +321,7 @@ class Server(object):
                         my_deque.append(dequed_value)
                 else:
                     logging.debug(f"no {target} in self.clients")
-                sleep(1)
+                sleep(0.05)
         logging.debug("client incoming thread has beed exited")
         exit(0)
 
@@ -386,7 +387,7 @@ class Server(object):
             client_thread = threading.Thread(
                 target=self.client_handle, args=[client])
             client_thread.start()
-            sleep(1)
+            sleep(0.05)
         logging.debug("add_client is exiting")
         exit(0)
 

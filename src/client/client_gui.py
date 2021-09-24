@@ -1,7 +1,11 @@
 import sys
 # from PySide2.QtCore import QPropertyAnimation, QTimer
 # from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QApplication, QMainWindow, QListView, QLineEdit
+from PySide2.QtWidgets import (QApplication,
+                               QMainWindow,
+                               QListView,
+                               QLineEdit,
+                               QListWidgetItem)
 from PySide2.QtCore import QThreadPool, QRect, QSize
 from main_ui import Ui_MainWindow
 from functools import partial
@@ -59,7 +63,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.create_group_btn.clicked.connect(
             self.show_group_creator_stack)
 
-        self.group_add_member.returnPressed.connect(self.add_member)
+        self.group_add_member_line.returnPressed.connect(self.add_member)
+
+        self.apply_group_editor_btn.clicked.connect(self.apply_group_action)
+
+        self.group_remove_member_line.returnPressed.connect(self.remove_member)
+
+        self.exit_group_editor_btn.clicked.connect(self.reset_page_3)
+        # NOTE: reset all the group ui to default
 
         self.client_inner = Client()
         self.connected_to_server = False
@@ -104,6 +115,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug(f"unvalid, {selected}")
             self.valid_conversation = False
 
+    def reset_page_3(self):
+        """
+            reset page 3 to default values, so after Exit
+            the changes wont be saved
+        """
+        objs_to_reset = [self.group_remove_member_line,
+                         self.group_name_line, self.group_add_member_line]
+        [obj.clear() for obj in objs_to_reset]
+        self.members_list.clear()
+        self.switch_to_page_2()
+
     def is_valid_conversation(self, user_id: str) -> bool:
         unvalid = [self.comboBox.placeholderText(
         ), self.client_inner.get_username()]
@@ -141,7 +163,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         background-color: rgb(255, 255, 255,50);
         border-radius: 10px;
         """)
-        self.repaint()
+        # self.repaint()
 
         sleep(0.2)
         # NOTE: if the password of username are empty need to handle
@@ -159,15 +181,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception as e:
                 logging.debug(e)
                 logging.debug("error while connecting to server")
-
         # trying to auth with password
-        if self.connected_to_server:
+        if True:  # self.connected_to_server:
             self.client_inner.set_username(username)
             if btn.text() == 'Login':
                 result = self.client_inner.login(password)
             elif btn.text() == 'Sign Up':
                 result = self.client_inner.sign_up(password)
-            if result:  # if auth was affermtive
+            if result:
                 function()
         btn.setStyleSheet(original_style)  # if the login, recolor logbtn
 
@@ -207,6 +228,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def handle_external_queue(self, progress_callback):
         logging.debug("handle external queue")
         while self.running:
+            sleep(0.05)
             task = self.client_inner.get_external_queue_task()
             if task:
                 action = task['Action']
@@ -232,8 +254,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         member = task_data['user_id']
                         self.members_list.addItem(member)
 
-            sleep(0.05)
         logging.debug("exiting thread in client_gui")
+        exit(0)
 
     def closeEvent(self, event):
         """
@@ -259,10 +281,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         # NOTE: make in outside of function, adding each time. O(n) + O(1)?
         current_members = self.get_group_members_list()
-        member_to_add = self.group_add_member.text()
+        member_to_add = self.group_add_member_line.text()
         can_be_added = True
+        my_id = self.client_inner.get_username()
         for member in current_members:
-            if member_to_add == member.text():
+            if member_to_add in (member.text(), my_id):
                 can_be_added = False
                 break
         if can_be_added:
@@ -275,16 +298,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
             remove member from the list
         """
-        member_to_remove = self.group_remove_member.text()
+        member_to_remove = self.group_remove_member_line.text()
         member_removed = False
-        for member in self.get_group_members_list(self):
+        for member in self.get_group_members_list():
             if member.text() == member_to_remove:
                 self.members_list.takeItem(self.members_list.row(member))
                 member_removed = True
                 break
         # NOTE: if member_removed false pop up of user not found
 
-    def get_group_members_list(self) -> List[str]:
+    def apply_group_action(self):
+        """
+            apply the group changes to the server
+        """
+        valid_action = True
+        group_name = self.group_name_line.text()
+        group_members = self.get_group_members_list()
+        group_members = [member.text() for member in group_members]
+        if group_name == '':
+            valid_action = False
+
+        if valid_action:
+            action_to_send = {'Action': 'CREATE_GROUP', 'Data': {
+                "members": group_members,
+                'admin': self.client_inner.get_username()
+            }}
+            self.client_inner.send(action_to_send, none_blocking=True)
+
+    def get_group_members_list(self) -> List[QListWidgetItem]:
         current_members = [self.members_list.item(x)
                            for x in range(self.members_list.count())]
         return current_members
@@ -306,3 +347,4 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MainWindow()
     app.exec_()
+    sys.exit(app.exec_())

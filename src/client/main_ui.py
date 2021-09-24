@@ -154,18 +154,19 @@ class Ui_MainWindow(object):
         self.action_center.setStyleSheet("color: rgb(163, 151, 151);\n"
                                          "font: 9pt \"mononoki\";")
         self.action_center.setObjectName("action_center")
-        self.apply_group_editor = QtWidgets.QPushButton(self.page_3)
-        self.apply_group_editor.setGeometry(QtCore.QRect(450, 590, 201, 81))
-        self.apply_group_editor.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
-                                              "font: 14pt \"mononoki\";\n"
-                                              " border-radius: 10px;")
-        self.apply_group_editor.setObjectName("apply_group_editor")
-        self.Exit_group_editor = QtWidgets.QPushButton(self.page_3)
-        self.Exit_group_editor.setGeometry(QtCore.QRect(730, 590, 201, 81))
-        self.Exit_group_editor.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
+        self.apply_group_editor_btn = QtWidgets.QPushButton(self.page_3)
+        self.apply_group_editor_btn.setGeometry(
+            QtCore.QRect(450, 590, 201, 81))
+        self.apply_group_editor_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
+                                                  "font: 14pt \"mononoki\";\n"
+                                                  " border-radius: 10px;")
+        self.apply_group_editor_btn.setObjectName("apply_group_editor_btn")
+        self.exit_group_editor_btn = QtWidgets.QPushButton(self.page_3)
+        self.exit_group_editor_btn.setGeometry(QtCore.QRect(730, 590, 201, 81))
+        self.exit_group_editor_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
                                              "font: 14pt \"mononoki\";\n"
                                              " border-radius: 10px;")
-        self.Exit_group_editor.setObjectName("Exit_group_editor")
+        self.exit_group_editor_btn.setObjectName("exit_group_editor_btn")
         self.group_common_stack = QtWidgets.QStackedWidget(self.page_3)
         self.group_common_stack.setGeometry(QtCore.QRect(400, 80, 331, 321))
         self.group_common_stack.setStyleSheet(
@@ -173,27 +174,28 @@ class Ui_MainWindow(object):
         self.group_common_stack.setObjectName("group_common_stack")
         self.group_common = QtWidgets.QWidget()
         self.group_common.setObjectName("group_common")
-        self.group_remove_member = QtWidgets.QLineEdit(self.group_common)
-        self.group_remove_member.setGeometry(QtCore.QRect(30, 230, 291, 71))
-        self.group_remove_member.setStyleSheet("border: 3px light green; \n"
-                                               "font: 14pt \"mononoki\";\n"
-                                               "                  background-color: rgba(0, 255, 255, 100);\n"
-                                               "border-radius: 10px;")
-        self.group_remove_member.setObjectName("group_remove_member")
-        self.group_add_member = QtWidgets.QLineEdit(self.group_common)
-        self.group_add_member.setGeometry(QtCore.QRect(30, 130, 291, 71))
-        self.group_add_member.setStyleSheet("border: 3px light green; \n"
-                                            "font: 14pt \"mononoki\";\n"
-                                            "                  background-color: rgba(0, 255, 255, 100);\n"
-                                            "border-radius: 10px;")
-        self.group_add_member.setObjectName("group_add_member")
-        self.group_name = QtWidgets.QLineEdit(self.group_common)
-        self.group_name.setGeometry(QtCore.QRect(30, 30, 291, 71))
-        self.group_name.setStyleSheet("border: 3px light green; \n"
-                                      "font: 14pt \"mononoki\";\n"
-                                      "                  background-color: rgba(0, 255, 255, 100);\n"
-                                      "border-radius: 10px;")
-        self.group_name.setObjectName("group_name")
+        self.group_remove_member_line = QtWidgets.QLineEdit(self.group_common)
+        self.group_remove_member_line.setGeometry(
+            QtCore.QRect(30, 230, 291, 71))
+        self.group_remove_member_line.setStyleSheet("border: 3px light green; \n"
+                                                    "font: 14pt \"mononoki\";\n"
+                                                    "                  background-color: rgba(0, 255, 255, 100);\n"
+                                                    "border-radius: 10px;")
+        self.group_remove_member_line.setObjectName("group_remove_member_line")
+        self.group_add_member_line = QtWidgets.QLineEdit(self.group_common)
+        self.group_add_member_line.setGeometry(QtCore.QRect(30, 130, 291, 71))
+        self.group_add_member_line.setStyleSheet("border: 3px light green; \n"
+                                                 "font: 14pt \"mononoki\";\n"
+                                                 "                  background-color: rgba(0, 255, 255, 100);\n"
+                                                 "border-radius: 10px;")
+        self.group_add_member_line.setObjectName("group_add_member_line")
+        self.group_name_line = QtWidgets.QLineEdit(self.group_common)
+        self.group_name_line.setGeometry(QtCore.QRect(30, 30, 291, 71))
+        self.group_name_line.setStyleSheet("border: 3px light green; \n"
+                                           "font: 14pt \"mononoki\";\n"
+                                           "                  background-color: rgba(0, 255, 255, 100);\n"
+                                           "border-radius: 10px;")
+        self.group_name_line.setObjectName("group_name_line")
         self.group_common_stack.addWidget(self.group_common)
         self.group_common_empty = QtWidgets.QWidget()
         self.group_common_empty.setObjectName("group_common_empty")
@@ -239,7 +241,7 @@ class Ui_MainWindow(object):
         self.text_to_send.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
                                              "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
                                              "p, li { white-space: pre-wrap; }\n"
-                                             "</style></head><body style=\" font-family:\'Sans Serif\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
+                                             "</style></head><body style=\" font-family:\'mononoki\'; font-size:16pt; font-weight:400; font-style:normal;\">\n"
                                              "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Apercu Mono\'; font-size:11pt;\"><br /></p></body></html>"))
         self.send_btn.setText(_translate("MainWindow", "Send"))
         self.user_search_line.setPlaceholderText(
@@ -251,13 +253,13 @@ class Ui_MainWindow(object):
             "MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Members</span></p></body></html>"))
         self.action_center.setText(_translate(
             "MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:14pt;\">Action Center</span></p></body></html>"))
-        self.apply_group_editor.setText(_translate("MainWindow", "Apply"))
-        self.Exit_group_editor.setText(_translate("MainWindow", "Exit"))
-        self.group_remove_member.setPlaceholderText(
+        self.apply_group_editor_btn.setText(_translate("MainWindow", "Apply"))
+        self.exit_group_editor_btn.setText(_translate("MainWindow", "Exit"))
+        self.group_remove_member_line.setPlaceholderText(
             _translate("MainWindow", "Remove Member:"))
-        self.group_add_member.setPlaceholderText(
+        self.group_add_member_line.setPlaceholderText(
             _translate("MainWindow", "Add Member:"))
-        self.group_name.setPlaceholderText(
+        self.group_name_line.setPlaceholderText(
             _translate("MainWindow", "Group Name:"))
         self.create_group_btn.setText(_translate("MainWindow", "Create Group"))
         self.edit_group_btn.setText(_translate("MainWindow", "Edit Group"))
@@ -270,19 +272,4 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
-    ui.chat = QtWidgets.QListView(ui.page_2)
-    ui.chat.setObjectName("chat")
-    ui.chat.setGeometry(QtCore.QRect(480, 20, 771, 581))
-    ui.chat.setMinimumSize(QtCore.QSize(10, 10))
-    ui.chat.setStyleSheet(
-        "border: 3px light green; \n"
-        "                  background-color: rgba(0, 255, 255, 90);\n"
-        "border-radius: 10px;"
-    )
-    ui.chat.setResizeMode(QtWidgets.QListView.Adjust)
-    ui.chat.setItemDelegate(bubble.MessageDelegate())
-    ui.model = bubble.MessageModel()
-    ui.chat.setModel(ui.model)
-    ui.stackedWidget.setCurrentWidget(ui.page_2)
-
     sys.exit(app.exec_())
