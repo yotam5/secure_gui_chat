@@ -122,12 +122,19 @@ class Ui_MainWindow(object):
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
         self.group_editor_btn = QtWidgets.QPushButton(self.page_2)
-        self.group_editor_btn.setGeometry(QtCore.QRect(130, 220, 241, 51))
+        self.group_editor_btn.setGeometry(QtCore.QRect(130, 280, 251, 51))
         self.group_editor_btn.setStyleSheet("border: 3px light green; \n"
                                             "font: 12pt \"mononoki\";\n"
                                             "                  background-color: rgba(0, 255, 255, 50);\n"
                                             "border-radius: 10px;")
         self.group_editor_btn.setObjectName("group_editor_btn")
+        self.group_search_line = QtWidgets.QLineEdit(self.page_2)
+        self.group_search_line.setGeometry(QtCore.QRect(130, 200, 251, 51))
+        self.group_search_line.setStyleSheet("border: 3px light green; \n"
+                                             "font: 12pt \"mononoki\";\n"
+                                             "                  background-color: rgba(0, 255, 255, 50);\n"
+                                             "border-radius: 10px;")
+        self.group_search_line.setObjectName("group_search_line")
         self.stackedWidget.addWidget(self.page_2)
         self.page_3 = QtWidgets.QWidget()
         self.page_3.setMinimumSize(QtCore.QSize(1280, 720))
@@ -166,8 +173,8 @@ class Ui_MainWindow(object):
         self.exit_group_editor_btn = QtWidgets.QPushButton(self.page_3)
         self.exit_group_editor_btn.setGeometry(QtCore.QRect(730, 590, 201, 81))
         self.exit_group_editor_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
-                                             "font: 14pt \"mononoki\";\n"
-                                             " border-radius: 10px;")
+                                                 "font: 14pt \"mononoki\";\n"
+                                                 " border-radius: 10px;")
         self.exit_group_editor_btn.setObjectName("exit_group_editor_btn")
         self.group_common_stack = QtWidgets.QStackedWidget(self.page_3)
         self.group_common_stack.setGeometry(QtCore.QRect(400, 80, 331, 321))
@@ -251,6 +258,8 @@ class Ui_MainWindow(object):
         self.comboBox.setItemText(0, _translate("MainWindow", "select chat:"))
         self.group_editor_btn.setText(_translate(
             "MainWindow", "move to group editor"))
+        self.group_search_line.setPlaceholderText(
+            _translate("MainWindow", "search group:"))
         self.members.setText(_translate(
             "MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Members</span></p></body></html>"))
         self.action_center.setText(_translate(

@@ -337,8 +337,8 @@ border-radius: 10px;</string>
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>220</y>
-        <width>241</width>
+        <y>280</y>
+        <width>251</width>
         <height>51</height>
        </rect>
       </property>
@@ -350,6 +350,25 @@ border-radius: 10px;</string>
       </property>
       <property name="text">
        <string>move to group editor</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="group_search_line">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>200</y>
+        <width>251</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: 3px light green; 
+font: 12pt &quot;mononoki&quot;;
+                  background-color: rgba(0, 255, 255, 50);
+border-radius: 10px;</string>
+      </property>
+      <property name="placeholderText">
+       <string>search group:</string>
       </property>
      </widget>
     </widget>
@@ -450,7 +469,7 @@ font: 14pt &quot;mononoki&quot;;
        <string>Apply</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="exit_group_editor">
+     <widget class="QPushButton" name="exit_group_editor_btn">
       <property name="geometry">
        <rect>
         <x>730</x>

@@ -270,7 +270,6 @@ class Server(object):
                     search_info['user_id'])
                 response = {"Action": "SEARCH",
                             "Data": {"Result": result}}
-
                 logging.debug("sending SEARCH result")
                 Server.send(response, client, secret)
 
@@ -449,3 +448,5 @@ if __name__ == '__main__':
     logging.debug("starting server:")
     server = Server()
     server.run()
+    result = server.database_manager.is_online("err")
+    print(result)

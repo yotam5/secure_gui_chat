@@ -43,8 +43,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.user_search_line.returnPressed.connect(self.user_search_key_event)
-
+        self.user_search_line.returnPressed.connect(self.user_search_event)
+        self.group_search_line.returnPressed.connect(self.group_search_event)
         self.login_btn.clicked.connect(
             partial(self.login_signup_to_server, self.login_btn,
                     partial(self.switch_to_page_2)))
@@ -134,13 +134,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"unvalid {unvalid} param {user_id}")
         return user_id not in unvalid
 
-    def user_search_key_event(self):
+    def user_search_event(self):
         """
             handle enter key event to search a user
         """
         searched_usr_id = self.user_search_line.text()
-        if searched_usr_id != self.client_inner.get_username():
+
+        if searched_usr_id != self.client_inner.get_username() and \
+                not searched_usr_id.isspace():
             self.client_inner.is_online(searched_usr_id)
+
+    def group_search_event(self):
+        """
+            handle enter key event to earch a group
+        """
+        searched_group_name = self.group_search_line.text()
+        if not searched_group_name.isspace() and \
+           searched_group_name != self.client_inner.get_username():
+            pass
 
     def add_to_combo_box(self, item: str):
         """
@@ -196,15 +207,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def send_button(self):
         text = self.text_to_send.toPlainText()
-        user_id_receiver = self.comboBox.currentText()
+        reciver_id = self.comboBox.currentText()
         logging.debug(
-            f"{self.client_inner.get_username()} to {user_id_receiver}")
+            f"{self.client_inner.get_username()} to {reciver_id}")
         if self.valid_conversation:
             self.message_to(text)
-            data = {'Action': 'PASS_TO', 'Data': {
-                'target': user_id_receiver, 'text': text}}
             self.text_to_send.setText('')
-            self.client_inner.send(data, none_blocking=True)
+            self.client_inner.pass_message(reciver_id, text)
 
     def switch_to_page_2(self):
         """ switch to chat page """
@@ -297,9 +306,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 can_be_added = False
                 break
         if can_be_added:
-            action_to_send = {'Action': "ADD_MEMBER", "Data": {"user_id":
-                                                               member_to_add}}
-            self.client_inner.send(action_to_send, none_blocking=True)
+            self.client_inner.add_member(member_to_add)
 
     def remove_member(self):
         # NOTE: move to thread the actions?
@@ -327,12 +334,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             valid_action = False
 
         if valid_action:
-            action_to_send = {'Action': 'CREATE_GROUP', 'Data': {
-                "members": group_members,
-                'admin': self.client_inner.get_username(),
-                'group_name': self.group_name_line.text()
-            }}
-            self.client_inner.send(action_to_send, none_blocking=True)
+            self.client_inner.create_group(group_name, group_members,
+                                           group_admin="me")
 
     def get_group_members_list(self) -> List[QListWidgetItem]:
         current_members = [self.members_list.item(x)

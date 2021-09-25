@@ -6,6 +6,7 @@ import logging
 import zlib
 from queue import deque
 import threading
+from typing import List
 
 # my own
 from src.utilities import rsa_utility
@@ -234,13 +235,44 @@ class Client(object):
         logging.debug("exiting sending thread")
         exit(0)
 
+    def create_group(self, group_name: str, group_members: List[str],
+                     group_admin: str = "me"):
+        """
+            send to the server task of creating a group
+        """
+        if group_admin == "me":
+            group_admin = self.user_id
+        action_to_send = {'Action': 'CREATE_GROUP', 'Data': {
+            "members": group_members,
+            'admin': group_admin,
+            'group_name': group_name
+        }}
+        self.send(action_to_send, none_blocking=True)
+
+    def pass_message(self, target: str, message: str):
+        """
+            send to the server text to pass for
+            both group and user
+        """
+        data = {'Action': 'PASS_TO', 'Data': {
+            'target': target, 'text': message}}
+        self.send(data, none_blocking=True)
+
+    def add_member(self, member: str):
+        """
+            send to server request to add member
+        """
+        action_to_send = {'Action': "ADD_MEMBER", "Data": {"user_id":
+                                                           member}}
+        self.send(action_to_send, none_blocking=True)
+
     def is_online(self, user_id: str):
         """
             ask server for user id and return boolean
             of server answer
         """
         data = {'Action': 'SEARCH', 'Data': {'user_id': user_id}}
-        self.send(data)
+        self.send(data, none_blocking=True)
 
         # NOTE: this will be handled in the thread cuz its blocking
         """        answer = self.client_socket.recv(4096)
