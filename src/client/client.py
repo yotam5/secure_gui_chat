@@ -33,7 +33,7 @@ class Client(object):
         self.localhost, self.port = network_configuration_loader()
         self.port = int(self.port)
         self.user_id = user_id
-        self.logged = False
+        self.connected = False
         self.publicKey = None
         self.privateKey = None
         self.serverPublicKey = None
@@ -81,6 +81,7 @@ class Client(object):
         logging.debug("initing connection")
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client_socket.connect((self.localhost, self.port))
+        self.connected = True
 
     def secure_connection(self):
         """
@@ -195,6 +196,7 @@ class Client(object):
         self.rec_thread_exit = False  # NOTE: change to recv exit
         logging.debug("recv_thread called inner client")
         while self.run_recv_thread:
+            sleep(0.05)
             try:
                 logging.debug("block size recv call")
                 data_size = self.client_socket.recv(5)
@@ -214,7 +216,6 @@ class Client(object):
                 self.__external_deque.append(data)
             else:
                 self.__internal_deque.append(data)
-            sleep(0.05)
         self.rec_thread_exit = True
         logging.debug("exiting recv threading in client inner")
         exit(0)
@@ -230,6 +231,7 @@ class Client(object):
                 logging.debug("sending data")
                 self.send(data_to_send, none_blocking=False)
                 logging.debug("data sent")
+        logging.debug("exiting sending thread")
         exit(0)
 
     def is_online(self, user_id: str):
@@ -275,13 +277,15 @@ class Client(object):
         """
             close the connection
         """
-        self.run_recv_thread = False
-        self.run_sending_thread = False
-        data = {'Action': 'EXIT'}
-        self.send(data)
-        while not self.rec_thread_exit:
-            sleep(0.05)
-        self.client_socket.close()
+        logging.debug("client inner close call")
+        if self.connected:
+            self.run_recv_thread = False
+            self.run_sending_thread = False
+            data = {'Action': 'EXIT'}
+            self.send(data)
+            while not self.rec_thread_exit:
+                sleep(0.05)
+            self.client_socket.close()
 
     @staticmethod
     def send_header(data: bytes) -> bytes:

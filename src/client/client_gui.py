@@ -86,6 +86,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.external_queue_worker.signals.progress.connect(self.message_from)
         self.running = True
         self.valid_conversation = False
+        self.safe_external_queue_exit = False
         self.chat = QListView(self.page_2)
         self.chat.setObjectName("chat")
         self.chat.setGeometry(QRect(480, 20, 771, 581))
@@ -255,6 +256,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.members_list.addItem(member)
 
         logging.debug("exiting thread in client_gui")
+        self.safe_external_queue_exit = True
         exit(0)
 
     def closeEvent(self, event):
@@ -268,7 +270,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.client_inner.close()
         except Exception:
             pass
-
+        logging.debug("inner client closed")
+        while not self.safe_external_queue_exit:
+            sleep(0.05)
+            continue
+        logging.debug("ui closed")
+        
     def resizeEvent(self, e):
         """
             window resize?
@@ -346,5 +353,4 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MainWindow()
-    app.exec_()
     sys.exit(app.exec_())

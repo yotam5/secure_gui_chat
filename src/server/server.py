@@ -210,7 +210,7 @@ class Server(object):
             logging.debug(f"got from client {client_data}")
             client_action = client_data['Action']
             logging.debug(f"client action is {client_action}")
-            
+
             if client_action in ['LOGIN', 'SIGN_UP']:
                 login_info = client_data['Data']
                 user_id = login_info['user_id']
@@ -272,9 +272,8 @@ class Server(object):
 
             elif client_action == "EXIT":
                 logging.debug("client exiting action called")
-                response = {"Action": "EXIT"}
+                response = {"Action": "EXIT", 'Data': {}}
                 Server.send(response, client, secret)
-
 
         if client_name:
             self.database_manager.logout(client_name)
@@ -289,7 +288,8 @@ class Server(object):
             NOTE: wont be terminated if wating for something
         """
         while not stop_running.acquire(False):
-            while my_deque:
+            sleep(0.05)
+            if my_deque:
                 dequed_value = my_deque.popleft()
                 logging.debug(f"deq val {dequed_value}")
                 logging.debug(f"dequed data is {dequed_value}")
@@ -321,7 +321,6 @@ class Server(object):
                         my_deque.append(dequed_value)
                 else:
                     logging.debug(f"no {target} in self.clients")
-                sleep(0.05)
         logging.debug("client incoming thread has beed exited")
         exit(0)
 
