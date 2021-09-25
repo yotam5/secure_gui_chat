@@ -142,7 +142,9 @@ class Ui_MainWindow(object):
         self.members_list = QtWidgets.QListWidget(self.page_3)
         self.members_list.setGeometry(QtCore.QRect(40, 70, 301, 621))
         self.members_list.setStyleSheet("background-color: rgb(100,119, 118, 123);\n"
-                                        "border-radius: 10px;")
+                                        "selection-color: rgba(255, 255, 255,0);\n"
+                                        "border-radius: 10px;\n"
+                                        "selection-background-color: rgba(255, 255, 255,0);")
         self.members_list.setObjectName("members_list")
         self.members = QtWidgets.QLabel(self.page_3)
         self.members.setGeometry(QtCore.QRect(130, 30, 201, 25))

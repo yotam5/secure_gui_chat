@@ -393,7 +393,9 @@ border-radius: 10px;</string>
       </property>
       <property name="styleSheet">
        <string notr="true">background-color: rgb(100,119, 118, 123);
-border-radius: 10px;</string>
+selection-color: rgba(255, 255, 255,0);
+border-radius: 10px;
+selection-background-color: rgba(255, 255, 255,0);</string>
       </property>
      </widget>
      <widget class="QLabel" name="members">
@@ -448,7 +450,7 @@ font: 14pt &quot;mononoki&quot;;
        <string>Apply</string>
       </property>
      </widget>
-     <widget class="QPushButton" name="Exit_group_editor">
+     <widget class="QPushButton" name="exit_group_editor">
       <property name="geometry">
        <rect>
         <x>730</x>

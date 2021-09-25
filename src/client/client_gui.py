@@ -87,6 +87,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.running = True
         self.valid_conversation = False
         self.safe_external_queue_exit = False
+
         self.chat = QListView(self.page_2)
         self.chat.setObjectName("chat")
         self.chat.setGeometry(QRect(480, 20, 771, 581))
@@ -275,7 +276,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             sleep(0.05)
             continue
         logging.debug("ui closed")
-        
+
     def resizeEvent(self, e):
         """
             window resize?
@@ -306,11 +307,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             remove member from the list
         """
         member_to_remove = self.group_remove_member_line.text()
-        member_removed = False
+        # member_removed = False
         for member in self.get_group_members_list():
             if member.text() == member_to_remove:
                 self.members_list.takeItem(self.members_list.row(member))
-                member_removed = True
+                # member_removed = True
                 break
         # NOTE: if member_removed false pop up of user not found
 
@@ -328,7 +329,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if valid_action:
             action_to_send = {'Action': 'CREATE_GROUP', 'Data': {
                 "members": group_members,
-                'admin': self.client_inner.get_username()
+                'admin': self.client_inner.get_username(),
+                'group_name': self.group_name_line.text()
             }}
             self.client_inner.send(action_to_send, none_blocking=True)
 

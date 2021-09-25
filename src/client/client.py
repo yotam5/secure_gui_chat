@@ -171,7 +171,7 @@ class Client(object):
         self.send(data)
         answer = self.client_socket.recv(1024)
         if answer:
-            self.login(password)  # NOTE
+            self.login(password)
         return msgpack.loads(answer)
 
     def send(self, data: dict, none_blocking=False):
@@ -200,7 +200,7 @@ class Client(object):
             try:
                 logging.debug("block size recv call")
                 data_size = self.client_socket.recv(5)
-                if len(data_size) != 5:
+                if len(data_size) != 5:  # FIXME: if server crashed, wont close
                     continue
             except Exception as e:
                 logging.debug(f"exception in recv thread {e}")

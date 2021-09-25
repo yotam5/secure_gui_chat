@@ -8,7 +8,7 @@ import signal
 from sys import exit
 import zlib
 import re
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 from queue import deque
 from time import sleep
 
@@ -52,9 +52,10 @@ class Server(object):
         self.directory = os.path.dirname(os.path.realpath(__file__))
         self.database_manager = DataBaseManager(
             f"{self.directory}/database.db")
-        # idea, create a dict with usernames for msg
+        self.groups: Dict[str, List[str]] = {}
+        self.supported_action = {'LOGIN', 'SIGN_UP', 'CREATE_GROUP',
+                                 'EXIT', 'SEARCH', 'ADD_MEMBER', 'PASS_TO'}
         signal.signal(signal.SIGINT, self.receive_sigint)
-        # self.login_name_q = queue.Queue()
 
     def load_keys(self):
         """
@@ -211,6 +212,9 @@ class Server(object):
             client_action = client_data['Action']
             logging.debug(f"client action is {client_action}")
 
+            if client_action not in self.supported_action:
+                continue  # NOTE: send error?
+
             if client_action in ['LOGIN', 'SIGN_UP']:
                 login_info = client_data['Data']
                 user_id = login_info['user_id']
@@ -242,17 +246,28 @@ class Server(object):
                     logging.debug(f"thread of {client_name}!")
 
             elif client_action == "CREATE_GROUP":
+                self.load_group('test_group_1')  # FIXME: test
                 logging.debug('client applied group creation')
-
+                group_info = client_data['Data']
+                group_name = group_info['group_name']
+                existed = self.database_manager.get_group_info(group_name)
+                existed = existed.fetchone()
+                logging.debug(f"group existed {existed}")
+                if not existed:
+                    group_admin = group_info['admin']
+                    group_members = group_info['members']
+                    self.database_manager.add_group(group_name, group_admin,
+                                                    group_members)
             elif client_action == 'PASS_TO':
                 logging.debug("add action PASS_TO to the queue")
                 my_deque.append(client_data)
 
             elif client_action == 'SEARCH':
-                data = client_data['Data']
+                search_info = client_data['Data']
                 logging.debug(
-                    f"client trying to search user {data['user_id']}")
-                result = self.database_manager.is_online(data['user_id'])
+                    f"client trying to search user {search_info['user_id']}")
+                result = self.database_manager.is_online(
+                    search_info['user_id'])
                 response = {"Action": "SEARCH",
                             "Data": {"Result": result}}
 
@@ -260,8 +275,8 @@ class Server(object):
                 Server.send(response, client, secret)
 
             elif client_action == 'ADD_MEMBER':
-                data = client_data['Data']
-                member_name = data['user_id']
+                member_data = client_data['Data']
+                member_name = member_data['user_id']
                 logging.debug("client wants to add member")
                 member_exist = self.database_manager.is_exist(member_name)
                 if member_exist:
@@ -408,8 +423,20 @@ class Server(object):
         self.exit = True
         exit(0)
 
+    def load_group(self, group_name: str):
+        """
+            load group and its members to the server
+        """
+        group_members_row = self.database_manager.get_group_info(
+            group_name, "group_users").fetchone()
+
+        if group_members_row:
+            members_list = msgpack.loads(group_members_row['group_users'])
+            self.groups[group_name] = members_list
+
     @staticmethod
-    def send(data: dict, client_socket: socket.socket, aeskey: bytes, block=True):
+    def send(data: dict, client_socket: socket.socket, aeskey: bytes,
+             block=True):
         data = AESCipher.encrypt_data_to_bytes(data, aeskey)
         header = Server.send_header(data)
         try:

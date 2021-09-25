@@ -1,8 +1,9 @@
 import sqlite3
 import logging
-# import msgpack
+import msgpack
 from src.utilities import hash_utility
 from threading import Lock
+from typing import List
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -26,14 +27,14 @@ class DataBaseManager(object):
             logging.debug(f"user with id {user_id} exists")
             return False
 
-        binSalt = sqlite3.Binary(salt)
-        binHash = sqlite3.Binary(hashed_password)
-        binPubKey = sqlite3.Binary(pubkey)
+        bin_salt = sqlite3.Binary(salt)
+        bin_hash = sqlite3.Binary(hashed_password)
+        bin_pubkey = sqlite3.Binary(pubkey)
 
         template = """INSERT INTO users_data
                           (id, salt, hashed, public_key, online)
                           VALUES (?, ?, ?, ?, ?);"""
-        data_tuple = (user_id, binSalt, binHash, binPubKey, 1)
+        data_tuple = (user_id, bin_salt, bin_hash, bin_pubkey, 1)
         self.__cursor.execute(template, data_tuple)
         self.__conn.commit()
         logging.debug(f"added user {user_id}")
@@ -117,16 +118,34 @@ class DataBaseManager(object):
         logging.debug("the database now is closing using __del__")
         self.close()
 
-    def add_group(self, group_name: str, group_admin: str, group_list: list):
+    def add_group(self, group_name: str, group_admin: str,
+                  group_list: List[str]):
         """ add group to the database """
+        bin_members = sqlite3.Binary(msgpack.dumps(group_list))
+        template = """INSERT INTO groups
+                          (group_name, group_users, group_admin)
+                          VALUES (?, ?, ?);"""
+        data_tuple = (group_name, bin_members, group_admin)
+        self.__cursor.execute(template, data_tuple)
+        self.__conn.commit()
 
     def remove_group(self, group_name: str):
         """ remove group from the database """
         pass
 
+    def get_group_info(self, group_name: str, selection="*"):
+        """
+            check if the group exist
+        """
+        result = self.__cursor.execute(
+            f"SELECT {selection} FROM groups WHERE"
+            f" group_name LIKE '{group_name}'"
+        )
+        return result
+
 
 if __name__ == '__main__':
     test = DataBaseManager()
-    print(test.login('yoram', '123'))
-    print(f"yoram online: {test.is_online('yoram')}")
-    print(f"jeff online: {test.is_online('jeff')}")
+    c = test.get_group_info('test_group_1', "group_name, group_users")
+    c = c.fetchone()
+    print(msgpack.loads(c['group_users']))
