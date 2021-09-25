@@ -151,7 +151,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         searched_group_name = self.group_search_line.text()
         if not searched_group_name.isspace() and \
            searched_group_name != self.client_inner.get_username():
-            pass
+            self.client_inner.group_search(searched_group_name)
 
     def add_to_combo_box(self, item: str):
         """

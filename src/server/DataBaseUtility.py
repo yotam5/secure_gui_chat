@@ -133,7 +133,7 @@ class DataBaseManager(object):
         """ remove group from the database """
         pass
 
-    def get_group_info(self, group_name: str, selection="*"):
+    def get_group_info(self, group_name: str, selection="*", single=False):
         """
             check if the group exist
         """
@@ -141,11 +141,15 @@ class DataBaseManager(object):
             f"SELECT {selection} FROM groups WHERE"
             f" group_name LIKE '{group_name}'"
         )
+        if single:
+            return result.fetchone()
         return result
 
 
 if __name__ == '__main__':
     test = DataBaseManager()
-    c = test.get_group_info('test_group_1', "group_name, group_users")
-    c = c.fetchone()
-    print(msgpack.loads(c['group_users']))
+    c = test.get_group_info('test_group_1', 'group_users')
+    cc = c.fetchone()
+    print(cc)
+    print(msgpack.loads(cc['group_users']))
+

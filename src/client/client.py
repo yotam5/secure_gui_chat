@@ -249,6 +249,12 @@ class Client(object):
         }}
         self.send(action_to_send, none_blocking=True)
 
+    def edit_group(self):
+        """
+            send to the server task of edit existing group
+        """
+        pass
+
     def pass_message(self, target: str, message: str):
         """
             send to the server text to pass for
@@ -279,6 +285,18 @@ class Client(object):
         logging.debug(f"asked server if {user_id} is online: {answer}")
         answer = AESCipher.decrypt_data_from_bytes(answer, self.__aes256key)
         return answer"""
+
+    def group_search(self, group_name: str, member: str = "me"):
+        """
+            task the server with searching a group
+            that contains the current user
+        """
+        if member == 'me':
+            member = self.user_id
+        action_to_send = {'Action': 'GROUP_SEARCH',
+                          'Data': {'group_name': group_name,
+                                   'member_id': member}}
+        self.send(action_to_send, none_blocking=True)
 
     def set_username(self, username: str):
         # set the username if not logged into the server

@@ -54,7 +54,8 @@ class Server(object):
             f"{self.directory}/database.db")
         self.groups: Dict[str, List[str]] = {}
         self.supported_action = {'LOGIN', 'SIGN_UP', 'CREATE_GROUP',
-                                 'EXIT', 'SEARCH', 'ADD_MEMBER', 'PASS_TO'}
+                                 'EXIT', 'SEARCH', 'ADD_MEMBER', 'PASS_TO',
+                                 'GROUP_SEARCH'}
         signal.signal(signal.SIGINT, self.receive_sigint)
 
     def load_keys(self):
@@ -212,8 +213,8 @@ class Server(object):
             client_action = client_data['Action']
             logging.debug(f"client action is {client_action}")
 
-            if client_action not in self.supported_action:
-                continue  # NOTE: send error?
+            """if client_action not in self.supported_action:
+                continue  # NOTE: send error?"""
 
             if client_action in ['LOGIN', 'SIGN_UP']:
                 login_info = client_data['Data']
@@ -245,8 +246,21 @@ class Server(object):
                         client_name = user_id
                     logging.debug(f"thread of {client_name}!")
 
+            elif client_action == 'GROUP_SEARCH':
+                search_data = client_data['Data']
+                group_name = search_data['group_name']
+                user_id = search_data['member_id']
+                group_members = self.database_manager. \
+                    get_group_info(group_name, "group_users", single=True)
+                group_members = msgpack.loads(group_members['group_users'])
+                logging.debug(f'in group search result is {group_members}')
+                if user_id in group_members:
+                    # NOTE: send false if not
+                    response = {'Action': 'GROUP_SEARCH',
+                                'Data': {'have_permission': True}}
+                    self.send(response, client, secret)
+            
             elif client_action == "CREATE_GROUP":
-                self.load_group('test_group_1')  # FIXME: test
                 logging.debug('client applied group creation')
                 group_info = client_data['Data']
                 group_name = group_info['group_name']
@@ -258,6 +272,7 @@ class Server(object):
                     group_members = group_info['members']
                     self.database_manager.add_group(group_name, group_admin,
                                                     group_members)
+
             elif client_action == 'PASS_TO':
                 logging.debug("add action PASS_TO to the queue")
                 my_deque.append(client_data)
@@ -435,13 +450,16 @@ class Server(object):
 
     @staticmethod
     def send(data: dict, client_socket: socket.socket, aeskey: bytes,
-             block=True):
-        data = AESCipher.encrypt_data_to_bytes(data, aeskey)
-        header = Server.send_header(data)
-        try:
-            client_socket.send(header + data)
-        except Exception as e:
-            logging.debug(f"error in send {e}")
+             non_blocking=False):
+        if non_blocking:
+            pass
+        else:
+            data = AESCipher.encrypt_data_to_bytes(data, aeskey)
+            header = Server.send_header(data)
+            try:
+                client_socket.send(header + data)
+            except Exception as e:
+                logging.debug(f"error in send {e}")
 
 
 if __name__ == '__main__':
