@@ -244,13 +244,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if task:
                 action = task['Action']
                 task_data = task["Data"]
-
-                if action == "SEARCH":
+                # NOTE: user_id must differ from a group?
+                if action in ["SEARCH", "GROUP_SEARCH"]:
                     logging.debug("search action finished")
                     if not self.add_to_combo_box(task_data["Result"]):
-                        unvalid_user = self.user_search_line.text()
-                        indication_msg = f"no user'{unvalid_user}'"
-                        self.user_search_line.setText(indication_msg)
+                        unvalid_search = self.user_search_line.text()
+                        indication_msg = f"no user nor group named' \
+                             {unvalid_search}'"
+                        if action == "GROUP_SEARCH":
+                            self.group_search_line.setText(indication_msg)
+                        else:
+                            self.user_search_line.setText(indication_msg)
 
                 elif action == "INCOMING":
                     logging.debug("got message from someone")
