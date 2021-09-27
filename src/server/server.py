@@ -26,7 +26,7 @@ from src.utilities import hash_utility
 from src.utilities.config_utility import network_configuration_loader
 
 """
-    NOTE: sending in a thread??
+    NOTE: need to make group counter, when 0 remove group?
     TODO:
         LOGIN:
             !verification that client talks to server, by having the client
@@ -57,6 +57,12 @@ class Server(object):
                                  'EXIT', 'SEARCH', 'ADD_MEMBER', 'PASS_TO',
                                  'GROUP_SEARCH'}
         signal.signal(signal.SIGINT, self.receive_sigint)
+
+    def receive_sigint(self, sig_num, frame):
+        logging.debug("received sigint now closing server and socket")
+        self.close_server()
+        self.exit = True
+        exit(0)
 
     def load_keys(self):
         """
@@ -252,14 +258,22 @@ class Server(object):
                 user_id = search_data['member_id']
                 group_members = self.database_manager. \
                     get_group_info(group_name, "group_users", single=True)
-                group_members = msgpack.loads(group_members['group_users'])
-                logging.debug(f'in group search result is {group_members}')
-                if user_id in group_members:
-                    # NOTE: send false if not
+                if group_members:
+                    """FIXME: need to do have_permission bool and group name
+                        so can indicate if exis but not permitted
+                    """
+                    group_members = msgpack.loads(group_members['group_users'])
+                    logging.debug(f'in group search result is {group_members}')
+                    have_permission = user_id in group_members
                     response = {'Action': 'GROUP_SEARCH',
-                                'Data': {'have_permission': True}}
+                                'Data': {'have_permission': have_permission,
+                                         'group_name': group_name}}
                     self.send(response, client, secret)
-            
+                else:
+                    response = {'Action': 'GROUP_SEARCH',
+                                'Data': {'have_permission': ''}}
+                    self.send(response, client, secret)
+
             elif client_action == "CREATE_GROUP":
                 logging.debug('client applied group creation')
                 group_info = client_data['Data']
@@ -270,8 +284,10 @@ class Server(object):
                 if not existed:
                     group_admin = group_info['admin']
                     group_members = group_info['members']
+                    group_members.append(group_admin)
                     self.database_manager.add_group(group_name, group_admin,
                                                     group_members)
+                self.load_group(group_name)
 
             elif client_action == 'PASS_TO':
                 logging.debug("add action PASS_TO to the queue")
@@ -284,7 +300,7 @@ class Server(object):
                 result = self.database_manager.is_online(
                     search_info['user_id'])
                 response = {"Action": "SEARCH",
-                            "Data": {"Result": result}}
+                            "Data": {"user_exist": result}}
                 logging.debug("sending SEARCH result")
                 Server.send(response, client, secret)
 
@@ -318,40 +334,55 @@ class Server(object):
         """
         while not stop_running.acquire(False):
             sleep(0.05)
-            if my_deque:
-                dequed_value = my_deque.popleft()
-                logging.debug(f"deq val {dequed_value}")
-                logging.debug(f"dequed data is {dequed_value}")
-                data = dequed_value['Data']
-                target = data['target']
-                text = data['text']
-                logging.debug(f"reciver is {target}")
-                # NOTE: must be in dict
+            if not my_deque:
+                continue
+            dequed_value = my_deque.popleft()
+            logging.debug(f"deq val {dequed_value}")
+            logging.debug(f"dequed data is {dequed_value}")
+            data = dequed_value['Data']
+            target = data['target']
+            text = data['text']
+            logging.debug(f"reciver is {target}")
+            # NOTE: must be in dict
+            #FIXME: sorce needs to be name of the group!?!
+            group_members = self.groups.get('target')
+            logging.debug(f"member of {target} are {group_members}")
+            if group_members:
+                [self.send_msg_to_client(client_name, member, text, my_deque)
+                    for member in group_members]
+            else:
+                self.send_msg_to_client(
+                    client_name, target, text, my_deque)
 
-                if target in self.clients:
-
-                    logging.debug(f"using {target} is a valid key")
-                    receiver_socket, lock = self.clients[target]
-                    not_busy = lock.acquire()  # aquire socket for sending
-
-                    if not_busy:
-                        logging.debug("client no busy, sending msg")
-                        sender_data = {'Action': 'INCOMING', 'Data': {
-                            'source': client_name, 'text': text
-                        }}
-                        target_secret = self.secrets[target]
-                        logging.debug("sending msg")
-                        Server.send(
-                            sender_data, receiver_socket, target_secret)
-                        logging.debug("msg sent")
-                        lock.release()  # release
-                    else:
-                        logging.debug("client busy, added to queue")
-                        my_deque.append(dequed_value)
-                else:
-                    logging.debug(f"no {target} in self.clients")
         logging.debug("client incoming thread has beed exited")
         exit(0)
+
+    def send_msg_to_client(self, source: str, target: str, data: str,
+                           qmode: deque = None):
+        logging.debug(f"source is {source} and target is {target}")
+        if target in self.clients:
+            logging.debug(f"using {target} is a valid key")
+            receiver_socket, lock = self.clients[target]
+            not_busy = lock.acquire()  # aquire socket for sending
+
+            if not_busy:
+                logging.debug("client no busy, sending msg")
+                sender_data = {'Action': 'INCOMING', 'Data': {
+                    'source': source, 'text': data
+                }}
+                client_secret = self.secrets[target]
+                logging.debug("sending msg")
+                Server.send(
+                    sender_data, receiver_socket, client_secret)
+                logging.debug("msg sent")
+                lock.release()  # release
+            else:
+                logging.debug("client busy, added to queue")
+                if qmode:
+                    qmode.append(data)
+        else:
+            logging.debug(f"no {target} in self.clients")
+        logging.debug("send msg was completed")
 
     def handle_signup(self, user_id: str, password: str) -> bool:
         """
@@ -391,7 +422,7 @@ class Server(object):
         clientPubBox = PKCS1_OAEP.new(importKey(clientPubKey))
         return clientPubKey, clientPubBox
 
-    @staticmethod
+    @ staticmethod
     def strong_password(password: str) -> bool:
         result = re.match(
             '((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*]).{8,30})',
@@ -426,16 +457,10 @@ class Server(object):
         host_name = socket.gethostname()
         return socket.gethostbyname(host_name + ".local")
 
-    @staticmethod
+    @ staticmethod
     def send_header(data: bytes) -> bytes:
         header = str(len(data)).zfill(4)
         return msgpack.dumps(header)
-
-    def receive_sigint(self, sig_num, frame):
-        logging.debug("received sigint now closing server and socket")
-        self.close_server()
-        self.exit = True
-        exit(0)
 
     def load_group(self, group_name: str):
         """
@@ -448,7 +473,7 @@ class Server(object):
             members_list = msgpack.loads(group_members_row['group_users'])
             self.groups[group_name] = members_list
 
-    @staticmethod
+    @ staticmethod
     def send(data: dict, client_socket: socket.socket, aeskey: bytes,
              non_blocking=False):
         if non_blocking:
@@ -457,7 +482,9 @@ class Server(object):
             data = AESCipher.encrypt_data_to_bytes(data, aeskey)
             header = Server.send_header(data)
             try:
+                logging.debug(f"msg {data}")
                 client_socket.send(header + data)
+                logging.debug("client got msg")
             except Exception as e:
                 logging.debug(f"error in send {e}")
 

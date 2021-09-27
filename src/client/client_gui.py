@@ -237,6 +237,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.group_common_stack.setCurrentWidget(self.group_common)
 
     def handle_external_queue(self, progress_callback):
+        """
+            handle tasks from the inner client
+        """
         logging.debug("handle external queue")
         while self.running:
             sleep(0.05)
@@ -245,22 +248,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 action = task['Action']
                 task_data = task["Data"]
                 # NOTE: user_id must differ from a group?
-                if action in ["SEARCH", "GROUP_SEARCH"]:
-                    logging.debug("search action finished")
-                    if not self.add_to_combo_box(task_data["Result"]):
-                        unvalid_search = self.user_search_line.text()
+                if action == "GROUP_SEARCH":
+                    logging.debug("group search action is finished")
+                    have_permission = task_data['have_permission']
+                    logging.debug(f"group perm data {have_permission}")
+                    if have_permission:
+                        logging.debug("adding group to list")
+                        self.add_to_combo_box(task_data['group_name'])
+                    else:
+                        indication_msg = f"no assosiated group \
+                            named {have_permission}"
+                        self.group_search_line.setText(indication_msg)
+                
+                elif action == "SEARCH":
+                    logging.debug("user search action finished")
+                    logging.debug(f"usr search data {task_data}")
+                    if not self.add_to_combo_box(task_data["user_exist"]):
+                        unvalid_search = task_data['user_exist']
                         indication_msg = f"no user nor group named' \
-                             {unvalid_search}'"
-                        if action == "GROUP_SEARCH":
-                            self.group_search_line.setText(indication_msg)
-                        else:
-                            self.user_search_line.setText(indication_msg)
+                                {unvalid_search}'"
+                        self.user_search_line.setText(indication_msg)
 
                 elif action == "INCOMING":
                     logging.debug("got message from someone")
                     logging.debug(task)
                     logging.debug(f"talking to {self.talkingto}")
-                    if self.is_valid_conversation(task_data['source']):
+                    logging.debug(task)
+                    if self.talkingto == task_data['source']:
                         progress_callback.emit(task_data["text"])
 
                 elif action == 'ADD_MEMBER':
