@@ -345,11 +345,11 @@ class Server(object):
             logging.debug(f"reciver is {target}")
             # NOTE: must be in dict
             #FIXME: sorce needs to be name of the group!?!
-            group_members = self.groups.get('target')
+            group_members = self.groups.get(target)
             logging.debug(f"member of {target} are {group_members}")
             if group_members:
-                [self.send_msg_to_client(client_name, member, text, my_deque)
-                    for member in group_members]
+                [self.send_msg_to_client(target, member, text, my_deque)
+                    for member in group_members if member != client_name]
             else:
                 self.send_msg_to_client(
                     client_name, target, text, my_deque)
