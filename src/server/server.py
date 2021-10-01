@@ -272,7 +272,7 @@ class Server(object):
                                 'Data': {'have_permission': have_permission,
                                          'group_name': group_name}}
                     self.send(response, client, secret)
-                else: #FIXME: what is this?
+                else:   # IXME: what is this?
                     response = {'Action': 'GROUP_SEARCH',
                                 'Data': {'have_permission': ''}}
                     self.send(response, client, secret)
@@ -294,6 +294,9 @@ class Server(object):
 
             elif client_action == 'PASS_TO':
                 logging.debug("add action PASS_TO to the queue")
+                original_msg = client_data['Data']['text']
+                prefixed = f"{client_name}: " + original_msg
+                client_data['Data']['text'] = prefixed
                 my_deque.append(client_data)
 
             elif client_action == 'SEARCH':
@@ -326,6 +329,7 @@ class Server(object):
         if client_name:
             self.database_manager.logout(client_name)
         logging.debug("client disconnected")
+        self.clients.pop(client_name)
         incoming_thread_stop.release()
         exit(0)  # terminate thread
 
@@ -347,7 +351,6 @@ class Server(object):
             text = data['text']
             logging.debug(f"reciver is {target}")
             # NOTE: must be in dict
-            #FIXME: sorce needs to be name of the group!?!
             group_members = self.groups.get(target)
             logging.debug(f"member of {target} are {group_members}")
             if group_members:
@@ -361,7 +364,7 @@ class Server(object):
         exit(0)
 
     def send_msg_to_client(self, source: str, target: str, data: str,
-                           qmode: deque = None):
+                           qmode=False, qlist: deque = None):
         logging.debug(f"source is {source} and target is {target}")
         if target in self.clients:
             logging.debug(f"using {target} is a valid key")
@@ -382,9 +385,14 @@ class Server(object):
             else:
                 logging.debug("client busy, added to queue")
                 if qmode:
-                    qmode.append(data)
+                    qlist.append(data)
         else:
             logging.debug(f"no {target} in self.clients")
+            if qmode:
+                logging.debug('qmode is on')
+                # NOTE: recursion, pay attention
+                self.send_msg_to_client(
+                    target, source, 'im offline', True, qlist)
         logging.debug("send msg was completed")
 
     def handle_signup(self, user_id: str, password: str) -> bool:

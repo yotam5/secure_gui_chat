@@ -116,6 +116,10 @@ class MessageModel(QAbstractListModel):
     def rowCount(self, index):
         return len(self.messages)
 
+    def clear(self):
+        """ clear chat """
+        self.messages.clear()
+
     def add_message(self, who, text):
         """
         Add an message to our message list, getting the text from the QLineEdit

@@ -112,6 +112,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug(f"talking to {item}")
             self.talkingto = item
             self.valid_conversation = True
+            self.model.clear()
         else:
             logging.debug(f"unvalid, {item}")
             self.valid_conversation = False
@@ -128,6 +129,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.switch_to_page_2()
 
     def is_valid_conversation(self, user_id: str) -> bool:
+        """ check if the conversation is valid one """
         unvalid = [self.comboBox.placeholderText(
         ), self.client_inner.get_username()]
         logging.debug(f"unvalid {unvalid} param {user_id}")
@@ -205,6 +207,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         btn.setStyleSheet(original_style)  # if the login, recolor logbtn
 
     def send_button(self):
+        """ handle send button event """
         text = self.text_to_send.toPlainText()
         reciver_id = self.comboBox.currentText()
         logging.debug(
@@ -271,7 +274,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 elif action == "INCOMING":
                     logging.debug("got message from someone")
                     logging.debug(task)
-                    logging.debug(f"talking to {self.talkingto}")
+                    logging.debug(f"talking to {self.talkingto}, got from ")
                     logging.debug(task)
                     if self.talkingto == task_data['source']:
                         progress_callback.emit(task_data["text"])
@@ -355,6 +358,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                            group_admin="me")
 
     def get_group_members_list(self) -> List[QListWidgetItem]:
+        """ return a list of the group members as widget items"""
         current_members = [self.members_list.item(x)
                            for x in range(self.members_list.count())]
         return current_members
