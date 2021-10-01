@@ -55,8 +55,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.send_btn.clicked.connect(self.send_button)
 
-        self.comboBox.view().pressed.connect(
-            self.comboBoxEvent)
+        self.comboBox.currentTextChanged.connect(self.comboBoxEvent)
 
         self.group_editor_btn.clicked.connect(self.switch_to_page_3)
 
@@ -103,18 +102,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.chat.setModel(self.model)
         self.show()
 
-    def comboBoxEvent(self, index):
+    def comboBoxEvent(self, item: str):
         """
             handle the combobox events when clicked to select a user
         """
-        selected = self.comboBox.currentText()
-        if self.is_valid_conversation(selected):
+        logging.debug(f"combo event is {item}")
+        if self.is_valid_conversation(item):
             logging.debug("valid conversation")
-            logging.debug(f"talking to {selected}")
-            self.talkingto = selected
+            logging.debug(f"talking to {item}")
+            self.talkingto = item
             self.valid_conversation = True
         else:
-            logging.debug(f"unvalid, {selected}")
+            logging.debug(f"unvalid, {item}")
             self.valid_conversation = False
 
     def reset_page_3(self):
@@ -259,7 +258,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         indication_msg = f"no assosiated group \
                             named {have_permission}"
                         self.group_search_line.setText(indication_msg)
-                
+
                 elif action == "SEARCH":
                     logging.debug("user search action finished")
                     logging.debug(f"usr search data {task_data}")

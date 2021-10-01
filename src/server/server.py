@@ -265,11 +265,14 @@ class Server(object):
                     group_members = msgpack.loads(group_members['group_users'])
                     logging.debug(f'in group search result is {group_members}')
                     have_permission = user_id in group_members
+                    if have_permission:
+                        logging.debug("group exists now loading")
+                        self.load_group(group_name)
                     response = {'Action': 'GROUP_SEARCH',
                                 'Data': {'have_permission': have_permission,
                                          'group_name': group_name}}
                     self.send(response, client, secret)
-                else:
+                else: #FIXME: what is this?
                     response = {'Action': 'GROUP_SEARCH',
                                 'Data': {'have_permission': ''}}
                     self.send(response, client, secret)
