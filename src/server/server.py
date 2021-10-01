@@ -329,7 +329,10 @@ class Server(object):
         if client_name:
             self.database_manager.logout(client_name)
         logging.debug("client disconnected")
-        self.clients.pop(client_name)
+        try:
+            self.clients.pop(client_name)
+        except KeyError:
+            logging.debug('key error')
         incoming_thread_stop.release()
         exit(0)  # terminate thread
 
@@ -354,11 +357,11 @@ class Server(object):
             group_members = self.groups.get(target)
             logging.debug(f"member of {target} are {group_members}")
             if group_members:
-                [self.send_msg_to_client(target, member, text, my_deque)
+                [self.send_msg_to_client(target, member, text, True, my_deque)
                     for member in group_members if member != client_name]
             else:
                 self.send_msg_to_client(
-                    client_name, target, text, my_deque)
+                    client_name, target, text, True, my_deque)
 
         logging.debug("client incoming thread has beed exited")
         exit(0)

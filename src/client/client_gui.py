@@ -5,7 +5,8 @@ from PySide2.QtWidgets import (QApplication,
                                QMainWindow,
                                QListView,
                                QLineEdit,
-                               QListWidgetItem)
+                               QListWidgetItem,
+                               QMessageBox)
 from PySide2.QtCore import QThreadPool, QRect, QSize
 from main_ui import Ui_MainWindow
 from functools import partial
@@ -16,6 +17,7 @@ from typing import List
 # mine
 from client import Client
 from workers import Worker
+from error_dict import ERROR_DICT
 import bubble
 logging.basicConfig(level=logging.DEBUG)
 
@@ -25,7 +27,7 @@ logging.basicConfig(level=logging.DEBUG)
         need to add group creator window switchted from
         the chat window
         needed functionality:
-            1-creating a group
+            1-thread popups
             2-adding users to the group
             3-removing user from the group
             4-rename the group
@@ -69,7 +71,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.group_remove_member_line.returnPressed.connect(self.remove_member)
 
         self.exit_group_editor_btn.clicked.connect(self.reset_page_3)
-        # NOTE: reset all the group ui to default
+
+        self.error_dialog = QMessageBox()
+        self.error_dialog.setWindowTitle('Error')
+        self.error_dialog.setIcon(QMessageBox.Warning)
 
         self.client_inner = Client()
         self.connected_to_server = False
@@ -117,6 +122,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug(f"unvalid, {item}")
             self.valid_conversation = False
 
+    def show_error(self, error_info: str):
+        # FIXME: need in qthread/signal
+        return
+        """ show the error in error dialog popup """
+        self.error_dialog.setText(error_info)
+        self.error_dialog.exec_()
+
     def reset_page_3(self):
         """
             reset page 3 to default values, so after Exit
@@ -144,6 +156,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if searched_usr_id != self.client_inner.get_username() and \
                 not searched_usr_id.isspace():
             self.client_inner.is_online(searched_usr_id)
+        else:
+            self.show_error(ERROR_DICT['Wrong UOG Search'])
 
     def group_search_event(self):
         """
@@ -153,6 +167,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not searched_group_name.isspace() and \
            searched_group_name != self.client_inner.get_username():
             self.client_inner.group_search(searched_group_name)
+        else:
+            self.show_error(ERROR_DICT['Wrong UOG Search'])
 
     def add_to_combo_box(self, item: str):
         """
@@ -165,6 +181,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if item not in AllItems:
                 self.comboBox.addItem(item)
                 return True
+            else:
+                self.show_error(ERROR_DICT['Already In ComoBox'])
         return False
 
     def login_signup_to_server(self, btn, function):
@@ -193,17 +211,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for worker in self.workers:
                     self.thread_pool.start(worker)
             except Exception as e:
+                self.show_error(ERROR_DICT['Offline'])
                 logging.debug(e)
                 logging.debug("error while connecting to server")
         # trying to auth with password
-        if True:  # self.connected_to_server:
+        if self.connected_to_server:
             self.client_inner.set_username(username)
             if btn.text() == 'Login':
-                result = self.client_inner.login(password)
+                if not self.client_inner.login(password):
+                    self.show_error(ERROR_DICT['False Login'])
+                else:
+                    function()
             elif btn.text() == 'Sign Up':
-                result = self.client_inner.sign_up(password)
-            if result:
-                function()
+                if not self.client_inner.sign_up(password):
+                    self.show_error(ERROR_DICT['False Sign Up'])
+                else:
+                    function()
         btn.setStyleSheet(original_style)  # if the login, recolor logbtn
 
     def send_button(self):
@@ -266,10 +289,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug("user search action finished")
                     logging.debug(f"usr search data {task_data}")
                     if not self.add_to_combo_box(task_data["user_exist"]):
-                        unvalid_search = task_data['user_exist']
-                        indication_msg = f"no user nor group named' \
-                                {unvalid_search}'"
-                        self.user_search_line.setText(indication_msg)
+                        self.show_error('False User Search')
 
                 elif action == "INCOMING":
                     logging.debug("got message from someone")
@@ -298,12 +318,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.running = False
         try:
             self.client_inner.close()
-        except Exception:
+        except Exception as e:
+            logging.debug(f'close exception {e}')
             pass
         logging.debug("inner client closed")
-        while not self.safe_external_queue_exit:
-            sleep(0.05)
-            continue
+        if self.connected_to_server:
+            while not self.safe_external_queue_exit:
+                sleep(0.05)
+                continue
         logging.debug("ui closed")
 
     def resizeEvent(self, e):
