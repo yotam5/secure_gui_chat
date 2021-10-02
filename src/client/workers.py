@@ -78,7 +78,7 @@ class Worker(QRunnable):
             self.signals.result.emit(result)
             self.signals.finished.emit()  # disconnected
         except RuntimeError as e:
-            logging.debug(e)
+            logging.debug(f"runtime error {e}")
 
     def kill(self):
         self.is_killed = True

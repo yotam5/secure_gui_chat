@@ -7,12 +7,13 @@ from PySide2.QtWidgets import (QApplication,
                                QLineEdit,
                                QListWidgetItem,
                                QMessageBox)
-from PySide2.QtCore import QThreadPool, QRect, QSize
+from PySide2.QtCore import QThreadPool, QRect, QSize, Signal
 from main_ui import Ui_MainWindow
 from functools import partial
 from time import sleep
 import logging
 from typing import List
+from queue import deque
 
 # mine
 from client import Client
@@ -72,10 +73,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.exit_group_editor_btn.clicked.connect(self.reset_page_3)
 
-        self.error_dialog = QMessageBox()
-        self.error_dialog.setWindowTitle('Error')
-        self.error_dialog.setIcon(QMessageBox.Warning)
-
         self.client_inner = Client()
         self.connected_to_server = False
         self.talkingto = ""
@@ -84,13 +81,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.thread_pool = QThreadPool()
         self.thread_funcs = [self.handle_external_queue]
         self.workers = []
+
+        self.running = True
+        self.valid_conversation = False
+        self.safe_external_queue_exit = False
+
+        self.dialogQ = deque()
+        self.dialog_worker = Worker(self.dialog_thread_worker)
+        self.dialog_worker.signals.progress.connect(self.show_dialog)
+        self.thread_pool.start(self.dialog_worker)
         self.external_queue_worker = Worker(self.handle_external_queue)
         self.external_queue_worker.signals.progress.connect(self.message_from)
         self.workers.append(self.external_queue_worker)
         # self.external_queue_worker.signals.progress.connect(self.message_from)
-        self.running = True
-        self.valid_conversation = False
-        self.safe_external_queue_exit = False
 
         self.chat = QListView(self.page_2)
         self.chat.setObjectName("chat")
@@ -107,6 +110,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.chat.setModel(self.model)
         self.show()
 
+    def create_dialog(self, info: str, title='Error', icon=QMessageBox.Warning,
+                      buttons=QMessageBox.Close):
+        """ create a dict that hold the dialog data """
+        dialog_dict = {'info': info, 'title': title, 'icon': icon,
+                       'buttons': buttons}
+        self.dialogQ.append(dialog_dict)
+
+    def dialog_thread_worker(self, progress_callback):
+        """ check if new dialog is available if so
+            emit to show_dialog
+        """
+        logging.debug("dialog thread called")
+        while self.running:
+            sleep(0.1)
+            if self.dialogQ:
+                logging.debug('handle dialog in queue')
+                progress_callback.emit(self.dialogQ.pop())
+
+    def show_dialog(self, dialog_dict):
+        """ show a dialog,
+            must be called form main qt thread
+        """
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle(dialog_dict['title'])
+        dialog.setIcon(dialog_dict['icon'])
+        dialog.setStandardButtons(QMessageBox.Close)
+        dialog.setText(dialog_dict['info'])
+        dialog.exec_()
+
     def comboBoxEvent(self, item: str):
         """
             handle the combobox events when clicked to select a user
@@ -121,13 +153,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             logging.debug(f"unvalid, {item}")
             self.valid_conversation = False
-
-    def show_error(self, error_info: str):
-        # FIXME: need in qthread/signal
-        return
-        """ show the error in error dialog popup """
-        self.error_dialog.setText(error_info)
-        self.error_dialog.exec_()
 
     def reset_page_3(self):
         """
@@ -157,7 +182,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not searched_usr_id.isspace():
             self.client_inner.is_online(searched_usr_id)
         else:
-            self.show_error(ERROR_DICT['Wrong UOG Search'])
+            self.create_dialog(ERROR_DICT['Wrong UOG Search'])
 
     def group_search_event(self):
         """
@@ -168,7 +193,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
            searched_group_name != self.client_inner.get_username():
             self.client_inner.group_search(searched_group_name)
         else:
-            self.show_error(ERROR_DICT['Wrong UOG Search'])
+            self.create_dialog(ERROR_DICT['Wrong UOG Search'])
 
     def add_to_combo_box(self, item: str):
         """
@@ -182,7 +207,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.comboBox.addItem(item)
                 return True
             else:
-                self.show_error(ERROR_DICT['Already In ComoBox'])
+                self.create_dialog(ERROR_DICT['Already In ComoBox'])
         return False
 
     def login_signup_to_server(self, btn, function):
@@ -211,7 +236,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for worker in self.workers:
                     self.thread_pool.start(worker)
             except Exception as e:
-                self.show_error(ERROR_DICT['Offline'])
+                self.create_dialog(ERROR_DICT['Offline'])
                 logging.debug(e)
                 logging.debug("error while connecting to server")
         # trying to auth with password
@@ -219,12 +244,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.client_inner.set_username(username)
             if btn.text() == 'Login':
                 if not self.client_inner.login(password):
-                    self.show_error(ERROR_DICT['False Login'])
+                    self.create_dialog(ERROR_DICT['False Login'])
                 else:
                     function()
             elif btn.text() == 'Sign Up':
                 if not self.client_inner.sign_up(password):
-                    self.show_error(ERROR_DICT['False Sign Up'])
+                    self.create_dialog(ERROR_DICT['False Sign Up'])
                 else:
                     function()
         btn.setStyleSheet(original_style)  # if the login, recolor logbtn
@@ -289,7 +314,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug("user search action finished")
                     logging.debug(f"usr search data {task_data}")
                     if not self.add_to_combo_box(task_data["user_exist"]):
-                        self.show_error('False User Search')
+                        self.create_dialog(ERROR_DICT['False User Search'])
 
                 elif action == "INCOMING":
                     logging.debug("got message from someone")
