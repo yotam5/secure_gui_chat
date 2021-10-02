@@ -323,6 +323,14 @@ class Client(object):
             return self.__external_deque.popleft()
         return None
 
+    def get_existed_group_data(self, group_name: str):
+        """ ask the server to get existing group data
+            the server will answer only if the asking the the admin
+        """
+        request = {'Action': 'GROUP_INFO_REQUEST', 'Data': {
+            'group_name': group_name}}
+        self.send(request, none_blocking=True)
+
     def close(self):
         """
             close the connection

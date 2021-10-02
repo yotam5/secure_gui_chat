@@ -326,6 +326,18 @@ class Server(object):
                 response = {"Action": "EXIT", 'Data': {}}
                 Server.send(response, client, secret)
 
+            elif client_action == 'GROUP_INFO_REQUEST':
+                requested_group_data = client_data['Data']
+                group_name = requested_group_data['group_name']
+                group_info = self.database_manager.get_group_info(
+                    group_name, single=True)
+                if group_info and client_name == group_info['group_admin']:
+                    logging.debug('group admin requested group data')
+                    members = msgpack.loads(group_info['group_users'])
+                    response = {'Action': 'GROUP_INFO_REQUEST', 'Data': {
+                                'members': members}}
+                    Server.send(response, client, secret)
+
         if client_name:
             self.database_manager.logout(client_name)
         logging.debug("client disconnected")
@@ -490,6 +502,10 @@ class Server(object):
     @ staticmethod
     def send(data: dict, client_socket: socket.socket, aeskey: bytes,
              non_blocking=False):
+        """ 
+            sending data to client, if non_blocking is True, then send
+            will send through the sending thread
+        """
         if non_blocking:
             pass
         else:

@@ -7,7 +7,7 @@ from PySide2.QtWidgets import (QApplication,
                                QLineEdit,
                                QListWidgetItem,
                                QMessageBox)
-from PySide2.QtCore import QThreadPool, QRect, QSize, Signal
+from PySide2.QtCore import QThreadPool, QRect, QSize
 from main_ui import Ui_MainWindow
 from functools import partial
 from time import sleep
@@ -24,16 +24,12 @@ logging.basicConfig(level=logging.DEBUG)
 
 """
     TODO:
-        --in the client make "send" non blocking?
-        need to add group creator window switchted from
-        the chat window
         needed functionality:
-            1-thread popups
             2-adding users to the group
             3-removing user from the group
             4-rename the group
             5-delete the group
-            6-making admin to the group
+            6-making admin to the group, or when exited auto admin
 
 """
 
@@ -62,16 +58,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.group_editor_btn.clicked.connect(self.switch_to_page_3)
 
-        self.create_group_btn.clicked.connect(
-            self.show_group_creator_stack)
+        self.create_group_btn.clicked.connect(self.show_group_creator_stack)
+
+        self.edit_group_btn.clicked.connect(self.show_group_editor_stack)
 
         self.group_add_member_line.returnPressed.connect(self.add_member)
 
         self.apply_group_editor_btn.clicked.connect(self.apply_group_action)
-
+        self.group_name_line.returnPressed.connect(self.request_group_members)
         self.group_remove_member_line.returnPressed.connect(self.remove_member)
 
         self.exit_group_editor_btn.clicked.connect(self.reset_page_3)
+
+        self.group_mode = ''  # modes: '', 'edit', 'create'
 
         self.client_inner = Client()
         self.connected_to_server = False
@@ -280,7 +279,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.group_action_stack.setCurrentWidget(self.select_group_action)
 
     def show_group_creator_stack(self):
+        self.group_mode = 'CREATE_GROUP'
         """ change page 3 stacks for group creating """
+        self.group_action_stack.setCurrentWidget(self.empty_group_selection)
+        self.repaint()
+        sleep(0.2)
+        self.group_common_stack.setCurrentWidget(self.group_common)
+
+    def show_group_editor_stack(self):
+        """ change the stack to show the group editor
+            for already existing group
+        """
+        self.group_mode = 'EDIT_GROUP'
         self.group_action_stack.setCurrentWidget(self.empty_group_selection)
         self.repaint()
         sleep(0.2)
@@ -409,6 +419,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         current_members = [self.members_list.item(x)
                            for x in range(self.members_list.count())]
         return current_members
+
+    def request_group_members(self):
+        """
+            initiate the group member request of inner client
+            if in EDIT_GROUP mode
+        """
+        if self.group_mode == 'EDIT_GROUP':
+            self.client_inner.get_existed_group_data(
+                self.group_name_line.text())
 
     def message_to(self, text: str):
         """
