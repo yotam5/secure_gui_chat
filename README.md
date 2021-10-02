@@ -8,7 +8,7 @@ In the project i used rsa, diffie hellman, aes and hashing to simulate a secure 
 
 
 # Running example
-![running example](demo2.gif "running example")
+![running example](https://github.com/yotam5/secure_gui_chat/blob/main/demo2.gif "running example")
 
 ## Usage
 NOTE: please add to the python path the folder of the project or move the files by hand to the folders where used
