@@ -13,5 +13,7 @@ ERROR_DICT = {
 
     'False User Search': 'No user was found with your search key',
 
-    'Already In ComoBox': 'The searched have been added already'
+    'Already In ComoBox': 'The searched have been added already',
+
+    'User Doesnt Exist': 'The user you searched doesnt exist'
 }

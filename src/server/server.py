@@ -55,7 +55,7 @@ class Server(object):
         self.groups: Dict[str, List[str]] = {}
         self.supported_action = {'LOGIN', 'SIGN_UP', 'CREATE_GROUP',
                                  'EXIT', 'SEARCH', 'ADD_MEMBER', 'PASS_TO',
-                                 'GROUP_SEARCH'}
+                                 'GROUP_SEARCH', 'GROUP_INFO_REQUEST'}
         signal.signal(signal.SIGINT, self.receive_sigint)
 
     def receive_sigint(self, sig_num, frame):
@@ -253,35 +253,43 @@ class Server(object):
                     logging.debug(f"thread of {client_name}!")
 
             elif client_action == 'GROUP_SEARCH':
+                have_permission = False
                 search_data = client_data['Data']
                 group_name = search_data['group_name']
                 user_id = search_data['member_id']
                 group_members = self.database_manager. \
                     get_group_info(group_name, "group_users", single=True)
+
                 if group_members:
-                    """FIXME: need to do have_permission bool and group name
-                        so can indicate if exis but not permitted
-                    """
                     group_members = msgpack.loads(group_members['group_users'])
                     logging.debug(f'in group search result is {group_members}')
                     have_permission = user_id in group_members
                     if have_permission:
                         logging.debug("group exists now loading")
                         self.load_group(group_name)
-                    response = {'Action': 'GROUP_SEARCH',
-                                'Data': {'have_permission': have_permission,
-                                         'group_name': group_name}}
-                    self.send(response, client, secret)
-                else:   # IXME: what is this?
-                    response = {'Action': 'GROUP_SEARCH',
-                                'Data': {'have_permission': ''}}
+                        response = {'Action': 'GROUP_SEARCH',
+                                    'Data': {'have_permission':
+                                             have_permission,
+                                             'group_name': group_name
+                                             }}
+                        self.send(response, client, secret)
+
+                if not (have_permission or group_members):
+                    response = {'Action': 'ERROR',
+                                'Data': {
+                                    'origin_action': 'GROUP_SEARCH',
+                                    'info': 'Either the group doesnt'
+                                    ' exist or you cant join it'
+                                }}
                     self.send(response, client, secret)
 
             elif client_action == "CREATE_GROUP":
                 logging.debug('client applied group creation')
                 group_info = client_data['Data']
                 group_name = group_info['group_name']
-                existed = self.database_manager.get_group_info(group_name)
+                existed = self.database_manager.get_group_info(
+                    group_name,
+                    selection='group_admin')
                 existed = existed.fetchone()
                 logging.debug(f"group existed {existed}")
                 if not existed:
@@ -315,16 +323,24 @@ class Server(object):
                 member_name = member_data['user_id']
                 logging.debug("client wants to add member")
                 member_exist = self.database_manager.is_exist(member_name)
-                if member_exist:
-                    response = {'Action': 'ADD_MEMBER',
-                                'Data': {'user_exist': bool(member_exist),
-                                         'user_id': member_name}}
-                    Server.send(response, client, secret)
+                response = {'Action': 'ADD_MEMBER',
+                            'Data': {'user_exist': bool(member_exist),
+                                     'user_id': member_name}}
+                Server.send(response, client, secret)
 
             elif client_action == "EXIT":
                 logging.debug("client exiting action called")
                 response = {"Action": "EXIT", 'Data': {}}
                 Server.send(response, client, secret)
+
+            elif client_action == 'EDIT_GROUP':
+                group_data = client_data['Data']
+                origin_group_name = group_data['origin_name']
+                group_data['members'].append(group_data['admin'])
+                self.database_manager.remove_group(origin_group_name)
+                self.database_manager.add_group(origin_group_name,
+                                                group_data['admin'],
+                                                group_data['members'])
 
             elif client_action == 'GROUP_INFO_REQUEST':
                 requested_group_data = client_data['Data']
@@ -455,11 +471,11 @@ class Server(object):
             password)
         return bool(result)
 
-    def broadcast(self, data):  # FIXME: race condition
+    def broadcast(self, data):
         """
             broadcast msg to all clients
         """
-        [client.send(msgpack.dumps(data)) for client in self.clients]
+        pass
 
     def add_client(self):
         """

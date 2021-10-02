@@ -339,6 +339,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if task_data['user_exist']:
                         member = task_data['user_id']
                         self.members_list.addItem(member)
+                    else:
+                        self.create_dialog(ERROR_DICT['False User Search'])
+
+                elif action == 'GROUP_INFO_REQUEST':
+                    group_members = task_data['members']
+                    logging.debug(f"group members are {group_members}")
+                    [self.members_list.addItem(member) for
+                     member in group_members]
+
+                elif action == 'ERROR':
+                    error_text = task_data['info']
+                    self.create_dialog(error_text)
 
         logging.debug("exiting thread in client_gui")
         self.safe_external_queue_exit = True
@@ -411,8 +423,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             valid_action = False
 
         if valid_action:
-            self.client_inner.create_group(group_name, group_members,
-                                           group_admin="me")
+            if self.group_mode == 'CREATE_GROUP':
+                self.client_inner.create_group(group_name, group_members)
+            else:  # edit group
+                self.client_inner.edit_group(group_name, group_members)
 
     def get_group_members_list(self) -> List[QListWidgetItem]:
         """ return a list of the group members as widget items"""

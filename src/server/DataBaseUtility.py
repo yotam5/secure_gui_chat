@@ -131,7 +131,10 @@ class DataBaseManager(object):
 
     def remove_group(self, group_name: str):
         """ remove group from the database """
-        pass
+        if self.get_group_info(group_name, 'group_admin', single=True):
+            self.__cursor.execute(
+                f"DELETE FROM groups WHERE group_name LIKE '{group_name}'")
+            self.__conn.commit()
 
     def get_group_info(self, group_name: str, selection="*", single=False):
         """
@@ -152,4 +155,3 @@ if __name__ == '__main__':
     cc = c.fetchone()
     print(cc)
     print(msgpack.loads(cc['group_users']))
-

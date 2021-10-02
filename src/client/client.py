@@ -238,7 +238,7 @@ class Client(object):
     def create_group(self, group_name: str, group_members: List[str],
                      group_admin: str = "me"):
         """
-            send to the server task of creating a group
+            send to the server task of creating a group,
         """
         if group_admin == "me":
             group_admin = self.user_id
@@ -249,11 +249,19 @@ class Client(object):
         }}
         self.send(action_to_send, none_blocking=True)
 
-    def edit_group(self):
+    def edit_group(self, group_name: str, group_members: List[str],
+                   group_admin: str = "me"):
         """
             send to the server task of edit existing group
         """
-        pass
+        if group_admin == 'me':
+            group_admin == self.user_id
+        action_to_send = {'Action': "EDIT_GROUP", 'Data': {
+            'members': group_members,
+            'admin': group_admin,
+            'origin_name': group_name
+        }}
+        self.send(action_to_send, none_blocking=True)
 
     def pass_message(self, target: str, message: str):
         """
