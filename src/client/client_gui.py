@@ -64,6 +64,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.group_add_member_line.returnPressed.connect(self.add_member)
 
+        self.remove_combo_line.returnPressed.connect(self.remove_from_combobox)
+
         self.apply_group_editor_btn.clicked.connect(self.apply_group_action)
         self.group_name_line.returnPressed.connect(self.request_group_members)
         self.group_remove_member_line.returnPressed.connect(self.remove_member)
@@ -278,6 +280,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.group_common_stack.setCurrentWidget(self.group_common_empty)
         self.group_action_stack.setCurrentWidget(self.select_group_action)
 
+    def remove_from_combobox(self):
+        """ remove from combobox """
+        item = self.remove_combo_line.text()
+        logging.debug(f"called remove combo {item}")
+        if item != '':
+            AllItems = [self.comboBox.currentIndex() for i in
+                        range(self.comboBox.count())]
+            removed = False
+            for i in AllItems:
+                if self.comboBox.itemText(i) == item:
+                    self.comboBox.removeItem(i)
+                    removed = True
+                    break
+            if not removed:
+                self.create_dialog(ERROR_DICT['Item Not In ComoBox'])
+        return False
+
     def show_group_creator_stack(self):
         self.group_mode = 'CREATE_GROUP'
         """ change page 3 stacks for group creating """
@@ -285,6 +304,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.repaint()
         sleep(0.2)
         self.group_common_stack.setCurrentWidget(self.group_common)
+        self.group_edit_bonus.setCurrentWidget(self.group_edit_bonus_empty)
 
     def show_group_editor_stack(self):
         """ change the stack to show the group editor
@@ -295,6 +315,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.repaint()
         sleep(0.2)
         self.group_common_stack.setCurrentWidget(self.group_common)
+        self.group_edit_bonus.setCurrentWidget(self.page)
 
     def handle_external_queue(self, progress_callback):
         """

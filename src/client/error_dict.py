@@ -15,5 +15,7 @@ ERROR_DICT = {
 
     'Already In ComoBox': 'The searched have been added already',
 
-    'User Doesnt Exist': 'The user you searched doesnt exist'
+    'User Doesnt Exist': 'The user you searched doesnt exist',
+
+    'Item Not In ComoBox': 'The was was not found in the combo box'
 }

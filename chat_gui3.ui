@@ -337,7 +337,7 @@ border-radius: 10px;</string>
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>280</y>
+        <y>360</y>
         <width>251</width>
         <height>51</height>
        </rect>
@@ -369,6 +369,25 @@ border-radius: 10px;</string>
       </property>
       <property name="placeholderText">
        <string>search group:</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="remove_combo_line">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>280</y>
+        <width>251</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: 3px light green; 
+font: 12pt &quot;mononoki&quot;;
+                  background-color: rgba(0, 255, 255, 50);
+border-radius: 10px;</string>
+      </property>
+      <property name="placeholderText">
+       <string>remove from combo:</string>
       </property>
      </widget>
     </widget>
@@ -559,6 +578,7 @@ border-radius: 10px;</string>
        </widget>
       </widget>
       <widget class="QWidget" name="group_common_empty"/>
+      <widget class="QWidget" name="widget"/>
      </widget>
      <widget class="QStackedWidget" name="group_action_stack">
       <property name="geometry">
@@ -611,6 +631,40 @@ font: 14pt &quot;mononoki&quot;;
        </widget>
       </widget>
       <widget class="QWidget" name="empty_group_selection"/>
+     </widget>
+     <widget class="QStackedWidget" name="group_edit_bonus">
+      <property name="geometry">
+       <rect>
+        <x>430</x>
+        <y>440</y>
+        <width>261</width>
+        <height>141</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgba(255, 255, 255,0);</string>
+      </property>
+      <widget class="QWidget" name="page">
+       <widget class="QPushButton" name="exit_group_btn">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>30</y>
+          <width>201</width>
+          <height>81</height>
+         </rect>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgba(180,255, 255, 90);
+font: 14pt &quot;mononoki&quot;;
+ border-radius: 10px;</string>
+        </property>
+        <property name="text">
+         <string>Exit Group</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="group_edit_bonus_empty"/>
      </widget>
     </widget>
    </widget>

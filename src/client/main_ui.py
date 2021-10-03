@@ -122,7 +122,7 @@ class Ui_MainWindow(object):
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
         self.group_editor_btn = QtWidgets.QPushButton(self.page_2)
-        self.group_editor_btn.setGeometry(QtCore.QRect(130, 280, 251, 51))
+        self.group_editor_btn.setGeometry(QtCore.QRect(130, 360, 251, 51))
         self.group_editor_btn.setStyleSheet("border: 3px light green; \n"
                                             "font: 12pt \"mononoki\";\n"
                                             "                  background-color: rgba(0, 255, 255, 50);\n"
@@ -135,6 +135,13 @@ class Ui_MainWindow(object):
                                              "                  background-color: rgba(0, 255, 255, 50);\n"
                                              "border-radius: 10px;")
         self.group_search_line.setObjectName("group_search_line")
+        self.remove_combo_line = QtWidgets.QLineEdit(self.page_2)
+        self.remove_combo_line.setGeometry(QtCore.QRect(130, 280, 251, 51))
+        self.remove_combo_line.setStyleSheet("border: 3px light green; \n"
+                                             "font: 12pt \"mononoki\";\n"
+                                             "                  background-color: rgba(0, 255, 255, 50);\n"
+                                             "border-radius: 10px;")
+        self.remove_combo_line.setObjectName("remove_combo_line")
         self.stackedWidget.addWidget(self.page_2)
         self.page_3 = QtWidgets.QWidget()
         self.page_3.setMinimumSize(QtCore.QSize(1280, 720))
@@ -209,6 +216,9 @@ class Ui_MainWindow(object):
         self.group_common_empty = QtWidgets.QWidget()
         self.group_common_empty.setObjectName("group_common_empty")
         self.group_common_stack.addWidget(self.group_common_empty)
+        self.widget = QtWidgets.QWidget()
+        self.widget.setObjectName("widget")
+        self.group_common_stack.addWidget(self.widget)
         self.group_action_stack = QtWidgets.QStackedWidget(self.page_3)
         self.group_action_stack.setGeometry(QtCore.QRect(840, 70, 251, 291))
         self.group_action_stack.setStyleSheet(
@@ -232,6 +242,23 @@ class Ui_MainWindow(object):
         self.empty_group_selection = QtWidgets.QWidget()
         self.empty_group_selection.setObjectName("empty_group_selection")
         self.group_action_stack.addWidget(self.empty_group_selection)
+        self.group_edit_bonus = QtWidgets.QStackedWidget(self.page_3)
+        self.group_edit_bonus.setGeometry(QtCore.QRect(430, 440, 261, 141))
+        self.group_edit_bonus.setStyleSheet(
+            "background-color: rgba(255, 255, 255,0);")
+        self.group_edit_bonus.setObjectName("group_edit_bonus")
+        self.page = QtWidgets.QWidget()
+        self.page.setObjectName("page")
+        self.exit_group_btn = QtWidgets.QPushButton(self.page)
+        self.exit_group_btn.setGeometry(QtCore.QRect(20, 30, 201, 81))
+        self.exit_group_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
+                                          "font: 14pt \"mononoki\";\n"
+                                          " border-radius: 10px;")
+        self.exit_group_btn.setObjectName("exit_group_btn")
+        self.group_edit_bonus.addWidget(self.page)
+        self.group_edit_bonus_empty = QtWidgets.QWidget()
+        self.group_edit_bonus_empty.setObjectName("group_edit_bonus_empty")
+        self.group_edit_bonus.addWidget(self.group_edit_bonus_empty)
         self.stackedWidget.addWidget(self.page_3)
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -260,6 +287,8 @@ class Ui_MainWindow(object):
             "MainWindow", "move to group editor"))
         self.group_search_line.setPlaceholderText(
             _translate("MainWindow", "search group:"))
+        self.remove_combo_line.setPlaceholderText(
+            _translate("MainWindow", "remove from combo:"))
         self.members.setText(_translate(
             "MainWindow", "<html><head/><body><p><span style=\" font-size:14pt;\">Members</span></p></body></html>"))
         self.action_center.setText(_translate(
@@ -274,6 +303,7 @@ class Ui_MainWindow(object):
             _translate("MainWindow", "Group Name:"))
         self.create_group_btn.setText(_translate("MainWindow", "Create Group"))
         self.edit_group_btn.setText(_translate("MainWindow", "Edit Group"))
+        self.exit_group_btn.setText(_translate("MainWindow", "Exit Group"))
 
 
 if __name__ == "__main__":
