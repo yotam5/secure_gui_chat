@@ -201,7 +201,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             add item: str to the comboBox
             selection options
         """
-        if item != '':
+        if item not in ['', self.client_inner.get_username()]:
+            logging.debug(f"combo user {self.client_inner.get_username()}")
+            logging.debug(item)
             AllItems = [self.comboBox.itemText(i) for i in
                         range(self.comboBox.count())]
             if item not in AllItems:
@@ -411,10 +413,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         member_to_add = self.group_add_member_line.text()
         can_be_added = True
         my_id = self.client_inner.get_username()
-        for member in current_members:
-            if member_to_add in (member.text(), my_id):
-                can_be_added = False
-                break
+        if self.client_inner.get_username() == member_to_add:
+            can_be_added = False
+        else:
+            for member in current_members:
+                if member_to_add == member.text():
+                    can_be_added = False
+                    break
+        logging.debug(f"del me {my_id}-{member_to_add}")
         if can_be_added:
             self.client_inner.add_member(member_to_add)
 

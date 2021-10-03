@@ -10,7 +10,7 @@
 
 import pictures
 from PySide2 import QtCore, QtGui, QtWidgets
-
+from Button import Button
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -54,7 +54,7 @@ class Ui_MainWindow(object):
                                           "font: 9pt \"mononoki\";\n"
                                           " border-radius: 10px;")
         self.password_field.setObjectName("password_field")
-        self.login_btn = QtWidgets.QPushButton(self.page_1)
+        self.login_btn = Button(self.page_1)
         self.login_btn.setGeometry(QtCore.QRect(370, 560, 191, 61))
         self.login_btn.setStyleSheet(" border: 2px solid white;\n"
                                      "color: rgb(138, 226, 52);\n"
@@ -63,7 +63,7 @@ class Ui_MainWindow(object):
         self.login_btn.setAutoDefault(False)
         self.login_btn.setDefault(False)
         self.login_btn.setObjectName("login_btn")
-        self.sign_up_btn = QtWidgets.QPushButton(self.page_1)
+        self.sign_up_btn = Button(self.page_1)
         self.sign_up_btn.setGeometry(QtCore.QRect(680, 560, 191, 61))
         self.sign_up_btn.setStyleSheet(" border: 2px solid white;\n"
                                        "color: rgb(138, 226, 52);\n"
@@ -100,7 +100,7 @@ class Ui_MainWindow(object):
                                         "                  background-color: rgba(0, 255, 255, 90);\n"
                                         "border-radius: 10px;")
         self.text_to_send.setObjectName("text_to_send")
-        self.send_btn = QtWidgets.QPushButton(self.page_2)
+        self.send_btn = Button(self.page_2)
         self.send_btn.setGeometry(QtCore.QRect(1080, 620, 171, 61))
         self.send_btn.setStyleSheet(" border: 2px solid white;\n"
                                     "color: rgb(7,11,55);\n"
@@ -121,7 +121,7 @@ class Ui_MainWindow(object):
                                     "border-radius: 10px;")
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
-        self.group_editor_btn = QtWidgets.QPushButton(self.page_2)
+        self.group_editor_btn = Button(self.page_2)
         self.group_editor_btn.setGeometry(QtCore.QRect(130, 360, 251, 51))
         self.group_editor_btn.setStyleSheet("border: 3px light green; \n"
                                             "font: 12pt \"mononoki\";\n"
@@ -170,14 +170,14 @@ class Ui_MainWindow(object):
         self.action_center.setStyleSheet("color: rgb(163, 151, 151);\n"
                                          "font: 9pt \"mononoki\";")
         self.action_center.setObjectName("action_center")
-        self.apply_group_editor_btn = QtWidgets.QPushButton(self.page_3)
+        self.apply_group_editor_btn = Button(self.page_3)
         self.apply_group_editor_btn.setGeometry(
             QtCore.QRect(450, 590, 201, 81))
         self.apply_group_editor_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
                                                   "font: 14pt \"mononoki\";\n"
                                                   " border-radius: 10px;")
         self.apply_group_editor_btn.setObjectName("apply_group_editor_btn")
-        self.exit_group_editor_btn = QtWidgets.QPushButton(self.page_3)
+        self.exit_group_editor_btn = Button(self.page_3)
         self.exit_group_editor_btn.setGeometry(QtCore.QRect(730, 590, 201, 81))
         self.exit_group_editor_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
                                                  "font: 14pt \"mononoki\";\n"
@@ -226,13 +226,13 @@ class Ui_MainWindow(object):
         self.group_action_stack.setObjectName("group_action_stack")
         self.select_group_action = QtWidgets.QWidget()
         self.select_group_action.setObjectName("select_group_action")
-        self.create_group_btn = QtWidgets.QPushButton(self.select_group_action)
+        self.create_group_btn = Button(self.select_group_action)
         self.create_group_btn.setGeometry(QtCore.QRect(30, 30, 201, 81))
         self.create_group_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
                                             "font: 14pt \"mononoki\";\n"
                                             " border-radius: 10px;")
         self.create_group_btn.setObjectName("create_group_btn")
-        self.edit_group_btn = QtWidgets.QPushButton(self.select_group_action)
+        self.edit_group_btn = Button(self.select_group_action)
         self.edit_group_btn.setGeometry(QtCore.QRect(30, 160, 201, 81))
         self.edit_group_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
                                           "font: 14pt \"mononoki\";\n"
@@ -249,7 +249,7 @@ class Ui_MainWindow(object):
         self.group_edit_bonus.setObjectName("group_edit_bonus")
         self.page = QtWidgets.QWidget()
         self.page.setObjectName("page")
-        self.exit_group_btn = QtWidgets.QPushButton(self.page)
+        self.exit_group_btn = Button(self.page)
         self.exit_group_btn.setGeometry(QtCore.QRect(20, 30, 201, 81))
         self.exit_group_btn.setStyleSheet("background-color: rgba(180,255, 255, 90);\n"
                                           "font: 14pt \"mononoki\";\n"
