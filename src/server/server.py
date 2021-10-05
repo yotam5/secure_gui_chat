@@ -53,6 +53,7 @@ class Server(object):
         self.database_manager = DataBaseManager(
             f"{self.directory}/database.db")
         self.groups: Dict[str, List[str]] = {}
+        #NOTE: make lock for groups?
         self.supported_action = {'LOGIN', 'SIGN_UP', 'CREATE_GROUP',
                                  'EXIT', 'SEARCH', 'ADD_MEMBER', 'PASS_TO',
                                  'GROUP_SEARCH', 'GROUP_INFO_REQUEST'}
@@ -353,6 +354,22 @@ class Server(object):
                     response = {'Action': 'GROUP_INFO_REQUEST', 'Data': {
                                 'members': members}}
                     Server.send(response, client, secret)
+
+            elif client_action == 'LEAVE_GROUP':
+                leaving_group_data = client_data['Data']
+                group_name = leaving_group_data['group_name']
+                group_data = self.database_manager.get_group_info(
+                    group_name, "group_users, group_admin", True)
+                if group_data:
+                    group_members = msgpack.loads(group_data['group_users'])
+                    group_admin = group_data['group_admin']
+                    if client_name in group_members:
+                        group_members.remove(client_name)
+                        logging.debug("client in group, now leaving")
+                        self.database_manager.remove_group(group_name)
+                        self.database_manager.add_group(
+                            group_name, group_admin, group_members)
+                        self.load_group(group_name)
 
         if client_name:
             self.database_manager.logout(client_name)

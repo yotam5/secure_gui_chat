@@ -72,6 +72,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.exit_group_editor_btn.clicked.connect(self.reset_page_3)
 
+        self.exit_group_btn.clicked.connect(self.exit_group)
+
         self.group_mode = ''  # modes: '', 'edit', 'create'
 
         self.client_inner = Client()
@@ -110,6 +112,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.model = bubble.MessageModel()
         self.chat.setModel(self.model)
         self.show()
+
+    def exit_group(self):
+        """ task inner client with exiting a group """
+        group_name = self.group_name_line.text()
+        self.client_inner.exit_group(group_name)
+        self.remove_from_combobox(group_name)
 
     def create_dialog(self, info: str, title='Error', icon=QMessageBox.Warning,
                       buttons=QMessageBox.Close):
@@ -165,6 +173,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         [obj.clear() for obj in objs_to_reset]
         self.members_list.clear()
         self.switch_to_page_2()
+        self.group_edit_bonus.setCurreswitchntWidget(
+            self.group_edit_bonus_empty)
 
     def is_valid_conversation(self, user_id: str) -> bool:
         """ check if the conversation is valid one """
@@ -281,10 +291,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.stackedWidget.setCurrentWidget(self.page_3)
         self.group_common_stack.setCurrentWidget(self.group_common_empty)
         self.group_action_stack.setCurrentWidget(self.select_group_action)
+        self.group_edit_bonus.setCurrentWidget(self.group_edit_bonus_empty)
 
-    def remove_from_combobox(self):
+    def remove_from_combobox(self, remove_param: str = ''):
         """ remove from combobox """
         item = self.remove_combo_line.text()
+        if remove_param:
+            item = remove_param
         logging.debug(f"called remove combo {item}")
         if item != '':
             AllItems = [self.comboBox.currentIndex() for i in
