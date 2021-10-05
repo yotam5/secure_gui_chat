@@ -7,6 +7,7 @@ from PySide2.QtWidgets import (QApplication,
                                QLineEdit,
                                QListWidgetItem,
                                QMessageBox)
+from CountDownClose import MessageBox
 from PySide2.QtCore import QThreadPool, QRect, QSize
 from main_ui import Ui_MainWindow
 from functools import partial
@@ -117,7 +118,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """ task inner client with exiting a group """
         group_name = self.group_name_line.text()
         self.client_inner.exit_group(group_name)
-        self.remove_from_combobox(group_name)
+        self.remove_from_combobox(group_name, ignore_missing=True)
 
     def create_dialog(self, info: str, title='Error', icon=QMessageBox.Warning,
                       buttons=QMessageBox.Close):
@@ -141,10 +142,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """ show a dialog,
             must be called form main qt thread
         """
-        dialog = QMessageBox(self)
+        dialog = MessageBox()  # removed (self)
         dialog.setWindowTitle(dialog_dict['title'])
         dialog.setIcon(dialog_dict['icon'])
-        dialog.setStandardButtons(QMessageBox.Close)
+        # dialog.setStandardButtons(QMessageBox.Close)
+        # overide the MB class self.closebtn, makes an error in runtime
         dialog.setText(dialog_dict['info'])
         dialog.exec_()
 
@@ -173,7 +175,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         [obj.clear() for obj in objs_to_reset]
         self.members_list.clear()
         self.switch_to_page_2()
-        self.group_edit_bonus.setCurreswitchntWidget(
+        self.group_edit_bonus.setCurrentWidget(
             self.group_edit_bonus_empty)
 
     def is_valid_conversation(self, user_id: str) -> bool:
@@ -293,7 +295,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.group_action_stack.setCurrentWidget(self.select_group_action)
         self.group_edit_bonus.setCurrentWidget(self.group_edit_bonus_empty)
 
-    def remove_from_combobox(self, remove_param: str = ''):
+    def remove_from_combobox(self, remove_param: str = '', ignore_missing=False):
         """ remove from combobox """
         item = self.remove_combo_line.text()
         if remove_param:
@@ -308,7 +310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.comboBox.removeItem(i)
                     removed = True
                     break
-            if not removed:
+            if not ignore_missing and not removed:
                 self.create_dialog(ERROR_DICT['Item Not In ComoBox'])
         return False
 
@@ -384,9 +386,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     [self.members_list.addItem(member) for
                      member in group_members]
 
-                elif action == 'ERROR':
-                    error_text = task_data['info']
-                    self.create_dialog(error_text)
+                elif action == 'DIALOG':
+                    icons = {'Warning': QMessageBox.Warning,
+                             'Information': QMessageBox.Information}
+                    text = task_data['info']
+                    title = task_data['title']
+                    icon = icons[task_data['icon']]
+                    self.create_dialog(text, title, icon)
 
         logging.debug("exiting thread in client_gui")
         self.safe_external_queue_exit = True

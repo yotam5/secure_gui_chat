@@ -53,7 +53,7 @@ class Server(object):
         self.database_manager = DataBaseManager(
             f"{self.directory}/database.db")
         self.groups: Dict[str, List[str]] = {}
-        #NOTE: make lock for groups?
+        # NOTE: make lock for groups?
         self.supported_action = {'LOGIN', 'SIGN_UP', 'CREATE_GROUP',
                                  'EXIT', 'SEARCH', 'ADD_MEMBER', 'PASS_TO',
                                  'GROUP_SEARCH', 'GROUP_INFO_REQUEST'}
@@ -276,11 +276,13 @@ class Server(object):
                         self.send(response, client, secret)
 
                 if not (have_permission or group_members):
-                    response = {'Action': 'ERROR',
+                    response = {'Action': 'DIALOG',
                                 'Data': {
                                     'origin_action': 'GROUP_SEARCH',
                                     'info': 'Either the group doesnt'
-                                    ' exist or you cant join it'
+                                    ' exist or you cant join it',
+                                    'title': 'ERROR',
+                                    'icon': 'Warning'
                                 }}
                     self.send(response, client, secret)
 
@@ -293,13 +295,24 @@ class Server(object):
                     selection='group_admin')
                 existed = existed.fetchone()
                 logging.debug(f"group existed {existed}")
+                action_dialog = 'The group name is already in use'
+                title = 'ERROR'
+                icon = 'Warning'
                 if not existed:
                     group_admin = group_info['admin']
                     group_members = group_info['members']
                     group_members.append(group_admin)
                     self.database_manager.add_group(group_name, group_admin,
                                                     group_members)
-                self.load_group(group_name)
+                    title = 'Information'
+                    action_dialog = 'The group was created successfully'
+                    self.load_group(group_name)  # NOTE
+                Server.send({'Action': 'DIALOG', 'Data': {
+                    'origin_action': 'CREATE_GROUP',
+                    'title': title,
+                    'icon': icon,
+                    'info': action_dialog
+                }}, client, secret)
 
             elif client_action == 'PASS_TO':
                 logging.debug("add action PASS_TO to the queue")
@@ -360,6 +373,7 @@ class Server(object):
                 group_name = leaving_group_data['group_name']
                 group_data = self.database_manager.get_group_info(
                     group_name, "group_users, group_admin", True)
+                error_info = ''
                 if group_data:
                     group_members = msgpack.loads(group_data['group_users'])
                     group_admin = group_data['group_admin']
@@ -370,6 +384,21 @@ class Server(object):
                         self.database_manager.add_group(
                             group_name, group_admin, group_members)
                         self.load_group(group_name)
+                        Sever.send({'Action': 'DIALOG', 'Data': {
+                            'info': 'You left the group successfully',
+                            'origin_action': 'LEAVE_GROUP',
+                            'icon': 'Information', 'title': 'Information'}},
+                            client, secret)
+                    else:
+                        error_info = 'You are not a member of that group'
+                else:
+                    error_info = 'The group doesnt exist'
+                if error_info:
+                    Server.send({'Action': 'DIALOG', 'Data': {
+                                'info': error_info,
+                                'title': 'ERROR',
+                                'origin_action': 'LEAVE_GROUP',
+                                'icon': 'Warning'}}, client, secret)
 
         if client_name:
             self.database_manager.logout(client_name)
@@ -378,7 +407,10 @@ class Server(object):
             self.clients.pop(client_name)
         except KeyError:
             logging.debug('key error')
-        incoming_thread_stop.release()
+        try:
+            incoming_thread_stop.release()
+        except RuntimeError as e:
+            logging.debug(f"runtime error while key release {e}")
         exit(0)  # terminate thread
 
     def client_incoming_thread(self, my_deque: deque, client_name: str,
