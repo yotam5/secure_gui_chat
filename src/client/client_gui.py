@@ -121,10 +121,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.remove_from_combobox(group_name, ignore_missing=True)
 
     def create_dialog(self, info: str, title='Error', icon=QMessageBox.Warning,
-                      buttons=QMessageBox.Close):
+                      buttons=QMessageBox.Close, time=4):
         """ create a dict that hold the dialog data """
         dialog_dict = {'info': info, 'title': title, 'icon': icon,
-                       'buttons': buttons}
+                       'buttons': buttons, 'time': 4}
         self.dialogQ.append(dialog_dict)
 
     def dialog_thread_worker(self, progress_callback):
@@ -137,12 +137,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.dialogQ:
                 logging.debug('handle dialog in queue')
                 progress_callback.emit(self.dialogQ.pop())
+        logging.debug("dialog thread closed")
 
     def show_dialog(self, dialog_dict):
         """ show a dialog,
             must be called form main qt thread
         """
-        dialog = MessageBox()  # removed (self)
+
+        count = dialog_dict.get('time')
+        if count:
+            dialog = MessageBox(count=count)  # removed (self)
+        else:
+            dialog = MessageBox()
         dialog.setWindowTitle(dialog_dict['title'])
         dialog.setIcon(dialog_dict['icon'])
         # dialog.setStandardButtons(QMessageBox.Close)
@@ -295,23 +301,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.group_action_stack.setCurrentWidget(self.select_group_action)
         self.group_edit_bonus.setCurrentWidget(self.group_edit_bonus_empty)
 
-    def remove_from_combobox(self, remove_param: str = '', ignore_missing=False):
+    def remove_from_combobox(self, remove_param: str = '',
+                             ignore_missing=False):
         """ remove from combobox """
         item = self.remove_combo_line.text()
         if remove_param:
             item = remove_param
         logging.debug(f"called remove combo {item}")
         if item != '':
-            AllItems = [self.comboBox.currentIndex() for i in
-                        range(self.comboBox.count())]
             removed = False
-            for i in AllItems:
+            for i in range(self.comboBox.count()):
                 if self.comboBox.itemText(i) == item:
                     self.comboBox.removeItem(i)
                     removed = True
                     break
             if not ignore_missing and not removed:
                 self.create_dialog(ERROR_DICT['Item Not In ComoBox'])
+            else:
+                self.create_dialog('Use was removed', 'Information',
+                                   QMessageBox.Information, time=3)
         return False
 
     def show_group_creator_stack(self):
@@ -363,7 +371,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug(f"usr search data {task_data}")
                     if not self.add_to_combo_box(task_data["user_exist"]):
                         self.create_dialog(ERROR_DICT['False User Search'])
-
+                    else:
+                        self.create_dialog('user was added', 'Information',
+                                           QMessageBox.Information, time=3)
                 elif action == "INCOMING":
                     logging.debug("got message from someone")
                     logging.debug(task)
@@ -392,11 +402,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     text = task_data['info']
                     title = task_data['title']
                     icon = icons[task_data['icon']]
-                    self.create_dialog(text, title, icon)
+                    ttime = task_data['time']
+                    self.create_dialog(text, title, icon, time=ttime)
 
         logging.debug("exiting thread in client_gui")
         self.safe_external_queue_exit = True
-        exit(0)
 
     def closeEvent(self, event):
         """

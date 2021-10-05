@@ -17,5 +17,5 @@ ERROR_DICT = {
 
     'User Doesnt Exist': 'The user you searched doesnt exist',
 
-    'Item Not In ComoBox': 'The item was not found in the combo box'
+    'Item Not In ComoBox': 'The item was not found in the combo box',
 }

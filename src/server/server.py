@@ -282,7 +282,8 @@ class Server(object):
                                     'info': 'Either the group doesnt'
                                     ' exist or you cant join it',
                                     'title': 'ERROR',
-                                    'icon': 'Warning'
+                                    'icon': 'Warning',
+                                    'time': 4
                                 }}
                     self.send(response, client, secret)
 
@@ -311,7 +312,8 @@ class Server(object):
                     'origin_action': 'CREATE_GROUP',
                     'title': title,
                     'icon': icon,
-                    'info': action_dialog
+                    'info': action_dialog,
+                    'time': 4
                 }}, client, secret)
 
             elif client_action == 'PASS_TO':
@@ -379,16 +381,24 @@ class Server(object):
                     group_admin = group_data['group_admin']
                     if client_name in group_members:
                         group_members.remove(client_name)
-                        logging.debug("client in group, now leaving")
-                        self.database_manager.remove_group(group_name)
-                        self.database_manager.add_group(
-                            group_name, group_admin, group_members)
-                        self.load_group(group_name)
-                        Sever.send({'Action': 'DIALOG', 'Data': {
-                            'info': 'You left the group successfully',
-                            'origin_action': 'LEAVE_GROUP',
-                            'icon': 'Information', 'title': 'Information'}},
-                            client, secret)
+                        if len(group_members) > 0:
+                            if group_admin == client_name:
+                                group_admin = group_members[-1]
+                            logging.debug("client in group, now leaving")
+                            self.database_manager.remove_group(group_name)
+                            self.database_manager.add_group(
+                                group_name, group_admin, group_members)
+                            self.load_group(group_name)
+                            self.send({'Action': 'DIALOG', 'Data': {
+                                'info': 'You left the group successfully',
+                                'origin_action': 'LEAVE_GROUP',
+                                'icon': 'Information', 'title': 'Information',
+                                'time': 4}
+                            },
+                                client, secret)
+                        else:
+                            self.database_manager.remove_group(group_name)
+                            self.groups.pop(group_name)
                     else:
                         error_info = 'You are not a member of that group'
                 else:
@@ -398,7 +408,8 @@ class Server(object):
                                 'info': error_info,
                                 'title': 'ERROR',
                                 'origin_action': 'LEAVE_GROUP',
-                                'icon': 'Warning'}}, client, secret)
+                                'icon': 'Warning',
+                                'time': 4}}, client, secret)
 
         if client_name:
             self.database_manager.logout(client_name)
@@ -450,12 +461,13 @@ class Server(object):
             logging.debug(f"using {target} is a valid key")
             receiver_socket, lock = self.clients[target]
             not_busy = lock.acquire()  # aquire socket for sending
-
+            
+            sender_data = {'Action': 'INCOMING', 'Data': {
+                'source': source, 'text': data
+            }}
+            
             if not_busy:
                 logging.debug("client no busy, sending msg")
-                sender_data = {'Action': 'INCOMING', 'Data': {
-                    'source': source, 'text': data
-                }}
                 client_secret = self.secrets[target]
                 logging.debug("sending msg")
                 Server.send(
@@ -470,9 +482,11 @@ class Server(object):
             logging.debug(f"no {target} in self.clients")
             if qmode:
                 logging.debug('qmode is on')
+                qlist.append(data)
                 # NOTE: recursion, pay attention
-                self.send_msg_to_client(
-                    target, source, 'im offline', True, qlist)
+                #self.send_msg_to_client(
+                #    target, source, 'im offline', True, qlist)
+
         logging.debug("send msg was completed")
 
     def handle_signup(self, user_id: str, password: str) -> bool:

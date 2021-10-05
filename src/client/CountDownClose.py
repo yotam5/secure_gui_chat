@@ -27,7 +27,7 @@ class MessageBox(QMessageBox):
         self.setStandardButtons(self.Close)  # Close button
         self.closeBtn = self.button(self.Close)  # Get the close button
         self.closeBtn.setText('(%s)' % count)
-        self.closeBtn.setEnabled(False)
+        self.closeBtn.setEnabled(True)
         self._timer = QTimer(self, timeout=self.doCountDown)
         self._timer.start(self._time)
 
