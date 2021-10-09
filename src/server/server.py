@@ -456,16 +456,18 @@ class Server(object):
 
     def send_msg_to_client(self, source: str, target: str, data: str,
                            qmode=False, qlist: deque = None):
+        """
+            sends message to a client and can use a queue
+        """
+        sender_data = {'Action': 'INCOMING', 'Data': {
+            'source': source, 'text': data
+        }}
         logging.debug(f"source is {source} and target is {target}")
         if target in self.clients:
             logging.debug(f"using {target} is a valid key")
             receiver_socket, lock = self.clients[target]
             not_busy = lock.acquire()  # aquire socket for sending
-            
-            sender_data = {'Action': 'INCOMING', 'Data': {
-                'source': source, 'text': data
-            }}
-            
+
             if not_busy:
                 logging.debug("client no busy, sending msg")
                 client_secret = self.secrets[target]
@@ -482,11 +484,10 @@ class Server(object):
             logging.debug(f"no {target} in self.clients")
             if qmode:
                 logging.debug('qmode is on')
-                qlist.append(data)
                 # NOTE: recursion, pay attention
-                #self.send_msg_to_client(
-                #    target, source, 'im offline', True, qlist)
-
+                self.send_msg_to_client(
+                    target, source, 'im offline', True, qlist)
+                qlist.append(data)
         logging.debug("send msg was completed")
 
     def handle_signup(self, user_id: str, password: str) -> bool:
