@@ -27,12 +27,6 @@ from src.utilities.config_utility import network_configuration_loader
 
 """
     NOTE: need to make group counter, when 0 remove group?
-    TODO:
-        LOGIN:
-            !verification that client talks to server, by having the client
-            verify the sat sign with the server private key!
-            ! create in client send/receive thread and also encrypt all data
-                that is being sent !
 """
 logging.basicConfig(level=logging.DEBUG)
 # note when works remember to use the device ip and not ip in conf
@@ -276,6 +270,7 @@ class Server(object):
                         self.send(response, client, secret)
 
                 if not (have_permission or group_members):
+                    print("cant add group")
                     response = {'Action': 'DIALOG',
                                 'Data': {
                                     'origin_action': 'GROUP_SEARCH',
@@ -307,7 +302,7 @@ class Server(object):
                                                     group_members)
                     title = 'Information'
                     action_dialog = 'The group was created successfully'
-                    self.load_group(group_name)  # NOTE
+                    self.load_group(group_name)
                 Server.send({'Action': 'DIALOG', 'Data': {
                     'origin_action': 'CREATE_GROUP',
                     'title': title,

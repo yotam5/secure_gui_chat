@@ -206,7 +206,12 @@ class Client(object):
             except Exception as e:
                 logging.debug(f"exception in recv thread {e}")
                 continue
-            data_size = int(msgpack.loads(data_size))
+            try:
+                data_size = int(msgpack.loads(data_size))
+            except msgpack.exceptions.ExtraData:
+                continue
+            except ValueError:
+                continue
             data = self.client_socket.recv(data_size)
             logging.debug(f"recv thread got {data}")
             # NOTE: move to a separated thread? the decrypt and handling? nah
