@@ -354,7 +354,9 @@ class Client(object):
             self.client_socket.close()
 
     def exit_group(self, group_name: str):
-        """ ask the server to leave the group """
+        """ 
+            ask the server to leave the group
+        """
         request = {'Action': 'LEAVE_GROUP', 'Data': {'group_name': group_name}}
         self.send(request, none_blocking=True)
 

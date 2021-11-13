@@ -23,17 +23,6 @@ from error_dict import ERROR_DICT
 import bubble
 logging.basicConfig(level=logging.DEBUG)
 
-"""
-    TODO:
-        needed functionality:
-            2-adding users to the group
-            3-removing user from the group
-            4-rename the group
-            5-delete the group
-            6-making admin to the group, or when exited auto admin
-
-"""
-
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     """
@@ -452,6 +441,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"del me {my_id}-{member_to_add}")
         if can_be_added:
             self.client_inner.add_member(member_to_add)
+            self.create_dialog('user was added', 'Information',
+                               QMessageBox.Information, time=3)
 
     def remove_member(self):
         # NOTE: move to thread the actions?
