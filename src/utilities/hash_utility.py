@@ -44,7 +44,8 @@ def generate_hash(password: str, salt_size: int = 32, length: int = 64):
 if __name__ == "__main__":
     import msgpack
     hasha, salt = generate_hash('123')
-    print(hash_verify(hasha, salt,"124"))
+    print(f"hash {hasha}")
+    print(f"salt {salt}")
+    print(hash_verify(hasha, salt, "124"))
     print(hasha)
     print(msgpack.dumps(hasha))
-
