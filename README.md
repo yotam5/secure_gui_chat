@@ -7,10 +7,15 @@ secure_gui_chat is my python project about networking that the main focus is abo
 In the project i used rsa, diffie hellman, aes and hashing to simulate a secure chat
 
 Functionality:
+
 -create group
+
 -remove user from group
+
 -add user to group
+
 -auto admin transferred when administrator leaves a group 
+
 -private messages between users
 # Running example
 ![running example](https://github.com/yotam5/secure_gui_chat/blob/main/demo2.gif "running example")
